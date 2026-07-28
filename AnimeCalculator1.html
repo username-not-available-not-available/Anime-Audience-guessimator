@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Western Population Calculator</title>
+<style>
+:root {
+    --bg: #121212;
+    --panel: #1e1e2e;
+    --accent: #ff3b3b;
+    --text: #e0e0e0;
+    --muted: #a0a0b5;
+    --input-bg: #2a2a3f;
+    --good: #55c8a8;
+    --warn: #e0b23e;
+  }
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+  }
+/* ==================== Merged-app chrome (tabs, search, shared panels) ==================== */
+.app-wrap { max-width: 700px; width: 100%; }
+.app-title { margin: 0 0 18px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; font-size: 1.4rem; color: var(--text); }
+
+.tab-bar { display: flex; gap: 8px; }
+.tab-btn {
+  flex: 1; padding: 14px; border-radius: 10px 10px 0 0; border: 1px solid #3a3a5a; border-bottom: none;
+  background: var(--input-bg); color: var(--muted); font-size: 1rem; font-weight: bold; cursor: pointer; text-align: center;
+}
+.tab-btn.active { background: var(--panel); color: #fff; border-color: var(--accent); }
+.tab-desc {
+  background: var(--panel); padding: 14px 18px; border-radius: 0 0 10px 10px; font-size: 0.85rem;
+  color: var(--muted); line-height: 1.5; margin-bottom: 18px; border: 1px solid #3a3a5a; border-top: none;
+}
+
+.search-panel, .ref-panel {
+  background: var(--panel); border-radius: 10px; padding: 16px 18px; margin-bottom: 18px; border: 1px solid #3a3a5a;
+}
+.search-panel h3, .ref-panel h3 { margin-top: 0; }
+.search-row { display: flex; gap: 8px; }
+.search-row input[type="text"] {
+  flex: 1; padding: 10px 12px; border-radius: 6px; border: 1px solid #3a3a5a;
+  background: var(--input-bg); color: #fff; font-size: 0.95rem; outline: none;
+}
+.search-row input[type="text"]:focus { border-color: var(--accent); }
+.search-row button {
+  padding: 10px 18px; border-radius: 6px; border: 1px solid var(--accent);
+  background: rgba(255,59,59,0.18); color: #fff; cursor: pointer; font-size: 0.9rem;
+}
+.search-row button:hover { background: rgba(255,59,59,0.32); }
+#animeSearchResults { margin-top: 8px; max-height: 320px; overflow-y: auto; }
+.anime-result { display: flex; gap: 10px; align-items: center; padding: 8px; border-radius: 6px; cursor: pointer; }
+.anime-result:hover { background: var(--input-bg); }
+.anime-result img { width: 40px; height: 56px; object-fit: cover; border-radius: 4px; background: #333; flex-shrink: 0; }
+.anime-result-title { font-size: 0.88rem; color: #fff; }
+.anime-result-meta { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+.ref-panel input[type="number"] {
+  padding: 8px 10px; border-radius: 6px; border: 1px solid #3a3a5a; background: var(--input-bg);
+  color: #fff; font-family: monospace; font-size: 0.9rem; outline: none; width: 180px;
+}
+.ref-panel input[type="number"]:focus { border-color: var(--accent); }
+
+.audience-ref { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #3a3a5a; }
+.audience-ref .sub-text { margin-top: 4px; font-style: normal; }
+.audience-ref b { color: var(--good); font-family: monospace; }
+
+/* ==================== Completion tab styles (scoped) ==================== */
+#panelCompletion .calculator {
+    background: var(--panel);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-width: 700px;
+    width: 100%;
+  }
+#panelCompletion h2 { margin-top: 0; border-bottom: 2px solid var(--accent); padding-bottom: 10px; font-size: 1.4rem; }
+#panelCompletion h3 { font-size: 0.95rem; color: var(--muted); margin: 26px 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+#panelCompletion .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
+#panelCompletion .input-group { display: flex; flex-direction: column; }
+#panelCompletion label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+#panelCompletion input[type="number"] {
+    padding: 12px; border-radius: 6px; border: 1px solid #3a3a5a;
+    background: var(--input-bg); color: #fff; font-size: 1.05rem; outline: none; width: 100%;
+  }
+#panelCompletion input[type="number"]:focus { border-color: var(--accent); }
+#panelCompletion .checkbox-group {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    background: rgba(255, 59, 59, 0.1); border: 1px solid rgba(255, 59, 59, 0.3);
+    padding: 15px; border-radius: 6px; cursor: pointer;
+  }
+#panelCompletion input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+#panelCompletion input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--accent); }
+#panelCompletion .sub-text { font-size: 0.8rem; color: var(--muted); margin-top: 6px; font-style: italic; line-height: 1.4; }
+#panelCompletion .param-row { margin-bottom: 16px; }
+#panelCompletion .param-title { display: block; font-size: 0.8rem; font-weight: bold; color: var(--text); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+#panelCompletion .param-inputs { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; }
+#panelCompletion .param-input { display: flex; flex-direction: column; background: var(--input-bg); border-radius: 6px; padding: 6px 8px; border: 1px solid #3a3a5a; }
+#panelCompletion .param-input span { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+#panelCompletion .param-input input { background: transparent; border: none; color: #fff; font-family: monospace; font-size: 0.95rem; outline: none; width: 100%; padding: 0; }
+#panelCompletion .param-input.likely { border-color: var(--accent); background: rgba(255,59,59,0.08); }
+#panelCompletion .param-input.likely span { color: var(--accent); }
+#panelCompletion .audience-panel { background: var(--input-bg); border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; }
+#panelCompletion .stat-line { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.85rem; padding: 5px 0; gap: 12px; }
+#panelCompletion .stat-line span { color: var(--muted); }
+#panelCompletion .stat-line b { font-family: monospace; font-size: 1rem; color: #fff; text-align: right; }
+#panelCompletion .tier-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+#panelCompletion .tier-btn {
+    flex: 1 1 130px; padding: 10px 6px; border-radius: 6px; border: 1px solid #3a3a5a;
+    background: var(--input-bg); color: var(--text); font-size: 0.74rem; cursor: pointer; text-align: center; line-height: 1.3;
+  }
+#panelCompletion .tier-btn.active { border-color: var(--accent); background: rgba(255,59,59,0.18); color: #fff; }
+#panelCompletion .ci-row { display: flex; gap: 8px; margin-bottom: 8px; }
+#panelCompletion .ci-btn { flex: 1; padding: 9px; border-radius: 6px; border: 1px solid #3a3a5a; background: var(--input-bg); color: var(--text); font-size: 0.82rem; cursor: pointer; text-align: center; }
+#panelCompletion .ci-btn.active { border-color: var(--accent); background: rgba(255,59,59,0.18); color: #fff; }
+#panelCompletion .suggestion {
+    background: rgba(85,200,168,0.08); border: 1px solid rgba(85,200,168,0.35);
+    color: #a8e6d4; padding: 12px 14px; border-radius: 6px; font-size: 0.82rem; margin-bottom: 14px; line-height: 1.55;
+  }
+#panelCompletion .confidence-badge {
+    display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 10px;
+    font-size: 0.66rem; background: rgba(224,178,62,0.18); color: var(--warn); vertical-align: middle; font-weight: bold;
+  }
+#panelCompletion .results { background: #11111a; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid var(--accent); }
+#panelCompletion .stage { margin-bottom: 24px; }
+#panelCompletion .stage:last-child { margin-bottom: 0; }
+#panelCompletion .stage-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+#panelCompletion .stage-value { font-size: 2rem; font-weight: bold; color: #fff; line-height: 1.1; }
+#panelCompletion .stage-value.accent { color: var(--accent); }
+#panelCompletion .stage-range { font-size: 0.85rem; color: var(--good); margin-top: 4px; font-family: monospace; }
+#panelCompletion .stage-mean { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+#panelCompletion table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 10px; }
+#panelCompletion td { padding: 5px 0; border-bottom: 1px solid #2a2a3f; color: var(--muted); }
+#panelCompletion td.num { text-align: right; color: #fff; font-family: monospace; }
+#panelCompletion .hist { display: flex; align-items: flex-end; gap: 2px; height: 70px; margin-top: 14px; }
+#panelCompletion .hist-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; background: var(--muted); opacity: 0.3; }
+#panelCompletion .hist-bar.in-range { background: var(--accent); opacity: 0.85; }
+#panelCompletion .hist-labels { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); font-family: monospace; margin-top: 4px; }
+#panelCompletion .method-note { font-size: 0.8rem; color: var(--muted); line-height: 1.65; margin-top: 16px; }
+#panelCompletion .method-note b { color: var(--text); }
+
+/* ==================== Estimation tab styles (scoped) ==================== */
+#panelEstimation .calculator {
+    background: var(--panel);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    max-width: 680px;
+    width: 100%;
+  }
+#panelEstimation h2 { margin-top: 0; border-bottom: 2px solid var(--accent); padding-bottom: 10px; font-size: 1.4rem; }
+#panelEstimation h3 { font-size: 0.95rem; color: var(--muted); margin: 26px 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+#panelEstimation .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; }
+#panelEstimation .input-group { display: flex; flex-direction: column; }
+#panelEstimation label { font-size: 0.8rem; font-weight: bold; margin-bottom: 5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+#panelEstimation input[type="number"] {
+    padding: 12px; border-radius: 6px; border: 1px solid #3a3a5a;
+    background: var(--input-bg); color: #fff; font-size: 1.05rem; outline: none; width: 100%;
+  }
+#panelEstimation input[type="number"]:focus { border-color: var(--accent); }
+#panelEstimation .checkbox-group {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    background: rgba(255, 59, 59, 0.1); border: 1px solid rgba(255, 59, 59, 0.3);
+    padding: 15px; border-radius: 6px; cursor: pointer;
+  }
+#panelEstimation input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+#panelEstimation input[type="range"] { width: 100%; cursor: pointer; accent-color: var(--accent); }
+#panelEstimation .sub-text { font-size: 0.8rem; color: var(--muted); margin-top: 6px; font-style: italic; line-height: 1.4; }
+#panelEstimation /* Low / Likely / High rows */
+  .param-row { margin-bottom: 16px; }
+#panelEstimation .param-title { display: block; font-size: 0.8rem; font-weight: bold; color: var(--text); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+#panelEstimation .param-inputs { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; }
+#panelEstimation .param-input { display: flex; flex-direction: column; background: var(--input-bg); border-radius: 6px; padding: 6px 8px; border: 1px solid #3a3a5a; }
+#panelEstimation .param-input span { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+#panelEstimation .param-input input { background: transparent; border: none; color: #fff; font-family: monospace; font-size: 0.95rem; outline: none; width: 100%; padding: 0; }
+#panelEstimation .param-input.likely { border-color: var(--accent); background: rgba(255,59,59,0.08); }
+#panelEstimation .param-input.likely span { color: var(--accent); }
+#panelEstimation .tier-row { display: flex; gap: 8px; margin-bottom: 12px; }
+#panelEstimation .tier-btn {
+    flex: 1; padding: 10px 6px; border-radius: 6px; border: 1px solid #3a3a5a;
+    background: var(--input-bg); color: var(--text); font-size: 0.76rem; cursor: pointer; text-align: center; line-height: 1.3;
+  }
+#panelEstimation .tier-btn.active { border-color: var(--accent); background: rgba(255,59,59,0.18); color: #fff; }
+#panelEstimation .ci-row { display: flex; gap: 8px; margin-bottom: 8px; }
+#panelEstimation .ci-btn { flex: 1; padding: 9px; border-radius: 6px; border: 1px solid #3a3a5a; background: var(--input-bg); color: var(--text); font-size: 0.82rem; cursor: pointer; text-align: center; }
+#panelEstimation .ci-btn.active { border-color: var(--accent); background: rgba(255,59,59,0.18); color: #fff; }
+#panelEstimation .suggestion {
+    background: rgba(85,200,168,0.08); border: 1px solid rgba(85,200,168,0.35);
+    color: #a8e6d4; padding: 10px 12px; border-radius: 6px; font-size: 0.82rem; margin-bottom: 14px; line-height: 1.4;
+  }
+#panelEstimation .results { background: #11111a; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid var(--accent); }
+#panelEstimation .stage { margin-bottom: 24px; }
+#panelEstimation .stage:last-child { margin-bottom: 0; }
+#panelEstimation .stage-label { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+#panelEstimation .stage-value { font-size: 2rem; font-weight: bold; color: #fff; line-height: 1.1; }
+#panelEstimation .stage-value.accent { color: var(--accent); }
+#panelEstimation .stage-range { font-size: 0.85rem; color: var(--good); margin-top: 4px; font-family: monospace; }
+#panelEstimation .stage-mean { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+#panelEstimation table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 10px; }
+#panelEstimation td { padding: 5px 0; border-bottom: 1px solid #2a2a3f; color: var(--muted); }
+#panelEstimation td.num { text-align: right; color: #fff; font-family: monospace; }
+#panelEstimation .hist { display: flex; align-items: flex-end; gap: 2px; height: 70px; margin-top: 14px; }
+#panelEstimation .hist-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; background: var(--muted); opacity: 0.3; }
+#panelEstimation .hist-bar.in-range { background: var(--accent); opacity: 0.85; }
+#panelEstimation .hist-labels { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); font-family: monospace; margin-top: 4px; }
+#panelEstimation .method-note { font-size: 0.8rem; color: var(--muted); line-height: 1.65; margin-top: 16px; }
+#panelEstimation .method-note b { color: var(--text); }
+
+/* ==================== Reach / Population Comparison section (additive) ==================== */
+.reach-section { background: #11111a; padding: 20px; border-radius: 8px; margin-top: 20px; border-left: 4px solid var(--good); }
+.reach-line { font-size: 0.88rem; color: var(--text); line-height: 1.6; padding: 7px 0; border-bottom: 1px dashed #2a2a3f; }
+.reach-line:last-of-type { border-bottom: none; }
+.reach-compare { margin-top: 14px; padding-top: 14px; border-top: 1px solid #2a2a3f; }
+.reach-compare label { display: block; font-size: 0.8rem; font-weight: bold; margin-bottom: 6px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.reach-compare select {
+  width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #3a3a5a;
+  background: var(--input-bg); color: #fff; font-size: 0.95rem; outline: none; cursor: pointer;
+}
+.reach-compare select:focus { border-color: var(--accent); }
+.reach-compare-text { font-size: 0.85rem; color: var(--good); margin-top: 10px; line-height: 1.55; min-height: 1em; }
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+<h2 class="app-title">📊 Anime Audience Calculator</h2>
+
+<div class="tab-bar">
+  <button type="button" class="tab-btn active" id="tabBtnEstimation" onclick="showTab('estimation')">Estimation</button>
+  <button type="button" class="tab-btn" id="tabBtnCompletion" onclick="showTab('completion')">Completion</button>
+  <button type="button" class="tab-btn" id="clearAllBtn" onclick="clearAll()" style="margin-left:auto;">Clear All</button>
+</div>
+<div class="tab-desc" id="tabDescCompletion" style="display:none;">Estimates the percentage of the active anime-watching audience that has completed this anime. (Better suited to gauging the more insular, completion-focused fandom.)</div>
+<div class="tab-desc" id="tabDescEstimation">Estimates the percentage of viewers who have partially watched or otherwise engaged with it. (Better suited to gauging broader fandom and interaction.)</div>
+
+<div class="search-panel">
+  <h3>Quick-fill from MyAnimeList <span style="opacity:.6; font-weight:normal;">(via Jikan API — optional)</span></h3>
+  <div class="search-row">
+    <input type="text" id="animeSearchInput" placeholder="Search an anime title… (3+ characters)" autocomplete="off" oninput="onAnimeSearchInput()" onkeydown="if(event.key==='Enter'){event.preventDefault();searchAnime();}">
+    <button type="button" onclick="searchAnime()">Search</button>
+  </div>
+  <div class="sub-text" id="animeSearchStatus" style="margin-top:8px;"></div>
+  <div id="animeSearchResults"></div>
+</div>
+
+<div class="ref-panel">
+  <h3>Reference Audience Baseline</h3>
+  <div class="sub-text" style="margin-bottom:8px;">Approximate combined U.S./Western population, used to put the reach numbers on both tabs in context.</div>
+  <input type="number" id="refPopulation" value="800000000" step="10000000" oninput="calculateCompletion(); calculateEstimation();">
+</div>
+
+<div id="panelCompletion" class="tab-panel" style="display:none;">
+<div class="calculator">
+  <h3>Raw MAL Stats</h3>
+  <div class="grid">
+    <div class="input-group"><label>Completed</label><input type="number" id="c_completed" value="100000" oninput="calculateCompletion()"></div>
+    <div class="input-group"><label>Dropped</label><input type="number" id="c_dropped" value="20000" oninput="calculateCompletion()"></div>
+    <div class="input-group"><label>Watching</label><input type="number" id="c_watching" value="15000" oninput="calculateCompletion()"></div>
+    <div class="input-group"><label>On-Hold</label><input type="number" id="c_onHold" value="10000" oninput="calculateCompletion()"></div>
+  </div>
+
+  <label class="checkbox-group">
+    <input type="checkbox" id="c_isAiring" onchange="calculateCompletion()">
+    <div>
+      <strong>Currently Airing?</strong><br>
+      <span style="font-size: 0.8rem; color: var(--muted);">If checked, Watching/On-Hold stay flat. If unchecked, they decay the longer the show has been finished.</span>
+    </div>
+  </label>
+
+  <div class="input-group" id="c_yearsWrap" style="margin-bottom: 20px;">
+    <label>Years Since It Finished: <span id="c_yearsLabel" style="color:var(--accent)">2</span></label>
+    <input type="range" id="c_yearsSince" min="0" max="20" step="0.5" value="2" oninput="calculateCompletion()">
+  </div>
+
+  <h3>Engagement Weights — Low / Likely / High</h3>
+
+  <div class="param-row">
+    <span class="param-title">Dropped Weight (active dislike)</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.05" id="c_dropWeight_low" value="0.7" oninput="calculateCompletion()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.05" id="c_dropWeight_likely" value="1.0" oninput="calculateCompletion()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.05" id="c_dropWeight_high" value="1.3" oninput="calculateCompletion()"></div>
+    </div>
+    <div class="sub-text">They watched enough to actively reject it — they count as audience.</div>
+  </div>
+
+  <div class="param-row">
+    <span class="param-title">Watching Decay Rate (post-finish)</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.05" id="c_watchDecay_low" value="0.15" oninput="calculateCompletion()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.05" id="c_watchDecay_likely" value="0.35" oninput="calculateCompletion()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.05" id="c_watchDecay_high" value="0.6" oninput="calculateCompletion()"></div>
+    </div>
+    <div class="sub-text">How fast "Watching" gets discounted per year after the show ends.</div>
+  </div>
+
+  <div class="param-row">
+    <span class="param-title">On-Hold Decay Rate (post-finish)</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.02" id="c_holdDecay_low" value="0.05" oninput="calculateCompletion()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.02" id="c_holdDecay_likely" value="0.15" oninput="calculateCompletion()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.02" id="c_holdDecay_high" value="0.35" oninput="calculateCompletion()"></div>
+    </div>
+    <div class="sub-text">On-hold decays slower than Watching — it's a deliberate pause, not a forgotten tab.</div>
+  </div>
+
+  <h3>Era Adjustment</h3>
+  <div class="input-group" style="margin-bottom: 12px;">
+    <label>Release Year</label>
+    <input type="number" id="c_releaseYear" value="2024" oninput="suggestAgeCompletion(); calculateCompletion()">
+  </div>
+  <div class="param-row">
+    <span class="param-title">Age Era Multiplier</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.05" id="c_ageMultiplier_low" value="1.0" oninput="calculateCompletion()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.05" id="c_ageMultiplier_likely" value="1.0" oninput="calculateCompletion()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.05" id="c_ageMultiplier_high" value="1.2" oninput="calculateCompletion()"></div>
+    </div>
+    <div class="sub-text">Auto-suggested from release year — all three fields stay editable.</div>
+  </div>
+
+  <h3>Audience Composition &amp; Retention</h3>
+  <div class="input-group" style="margin-bottom: 14px;">
+    <label>Episode Count <span style="opacity:.6; text-transform:none; font-weight:normal;">(for length-normalized retention)</span></label>
+    <input type="number" id="c_episodeCount" value="12" min="1" oninput="calculateCompletion()">
+    <div class="sub-text">Normalization only applies at 6+ episodes — movies and short OVAs use raw retention as-is, since there's no per-episode drop-off to model.</div>
+  </div>
+
+  <div class="audience-panel">
+    <div class="stat-line"><span>Decided audience (completed + dropped)</span><b id="c_decidedBase">–</b></div>
+    <div class="stat-line"><span>Raw retention</span><b id="c_retention">–</b></div>
+    <div class="sub-text" id="c_retentionCI">–</div>
+    <div class="stat-line" style="margin-top:8px;"><span>Length-adjusted retention <span style="opacity:.6">(12-ep equivalent)</span></span><b id="c_adjRetention">–</b></div>
+    <div class="sub-text" id="c_adjRetentionNote"></div>
+    <div class="stat-line" style="margin-top:8px;"><span>Completion retention rate <span style="opacity:.6">(probability of reaching the finale)</span></span><b id="c_completionRetention">–</b></div>
+    <div class="sub-text" id="c_completionRetentionNote"></div>
+  </div>
+
+  <div class="suggestion" id="c_tierSuggestion"></div>
+
+  <h3>Western Sample Scale</h3>
+  <div class="tier-row">
+    <div class="tier-btn" id="c_tierNiche" onclick="setTierCompletion('niche')">Niche / Cult<br><span style="color:var(--muted)">2.0–3.5x</span></div>
+    <div class="tier-btn" id="c_tierFandom" onclick="setTierCompletion('fandom')">Fandom Classic<br><span style="color:var(--muted)">3.0–7.0x</span></div>
+    <div class="tier-btn active" id="c_tierStandard" onclick="setTierCompletion('standard')">Standard Seasonal<br><span style="color:var(--muted)">5–8x</span></div>
+    <div class="tier-btn" id="c_tierMainstream" onclick="setTierCompletion('mainstream')">Mainstream Giant<br><span style="color:var(--muted)">10–18x</span></div>
+  </div>
+  <div class="param-row">
+    <span class="param-title">Scale Multiplier</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.5" id="c_westernScale_low" value="5.0" oninput="calculateCompletion()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.5" id="c_westernScale_likely" value="6.5" oninput="calculateCompletion()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.5" id="c_westernScale_high" value="8.0" oninput="calculateCompletion()"></div>
+    </div>
+    <div class="sub-text"><b style="color:var(--text)">Fandom Classic</b> is for shows that are huge <i>within</i> tracker culture but stay contained — high retention on a large base, without the casual crossover of a true mainstream giant. Click a tier to load a starting range, then fine-tune.</div>
+  </div>
+
+  <h3>Simulation Range</h3>
+  <div class="ci-row">
+    <div class="ci-btn" id="c_ci50" onclick="setCICompletion(50)">50%</div>
+    <div class="ci-btn active" id="c_ci80" onclick="setCICompletion(80)">80%</div>
+    <div class="ci-btn" id="c_ci95" onclick="setCICompletion(95)">95%</div>
+  </div>
+  <div class="sub-text">6,000 random draws per calculation, pulling one value from every Low–Likely–High range above.</div>
+
+  <div class="results">
+    <div class="stage">
+      <div class="stage-label">Effective Platform Viewers <span style="opacity:0.7">(weighted MAL, simulated median)</span></div>
+      <div class="stage-value" id="c_effViewers">0</div>
+      <div class="stage-range"><span id="c_ciLabelEff">80</span>% range: <span id="c_effRange">–</span></div>
+      <table>
+        <tr><td>Completed</td><td class="num" id="c_rowCompleted"></td></tr>
+        <tr><td>Dropped (weighted)</td><td class="num" id="c_rowDropped"></td></tr>
+        <tr><td>Watching (weighted)</td><td class="num" id="c_rowWatching"></td></tr>
+        <tr><td>On-Hold (weighted)</td><td class="num" id="c_rowHold"></td></tr>
+      </table>
+      <div class="sub-text">Table uses your "Likely" values only — the number above reflects the full simulated range.</div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-label">Age-Adjusted Platform Reach</div>
+      <div class="stage-value" id="c_ageAdjViewers">0</div>
+      <div class="stage-range"><span id="c_ciLabelAge">80</span>% range: <span id="c_ageRange">–</span></div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-label">Estimated Total Western Population Reach</div>
+      <div class="stage-value accent" id="c_totalReach">0</div>
+      <div class="stage-range"><span id="c_ciLabelTotal">80</span>% range: <span id="c_totalRange">–</span></div>
+      <div class="stage-mean">simulated mean: <span id="c_totalMean">–</span> (usually a bit above the median — the distribution skews right)</div>
+    </div>
+  </div>
+
+  <div class="hist" id="c_histContainer"></div>
+  <div class="hist-labels"><span id="c_histMin">–</span><span>6,000 simulated outcomes</span><span id="c_histMax">–</span></div>
+  <div class="audience-ref">
+    <div class="sub-text">That is <b id="c_pctRegular">–</b> of the ~20–25% of U.S./Western consumers who watch anime regularly.</div>
+    <div class="sub-text">That is <b id="c_pctLifetime">–</b> of the ~35–50% of people in the global West who've watched at least one anime in their lifetime.</div>
+  </div>
+
+  <div class="reach-section">
+    <h3>Completion Reach</h3>
+    <div class="reach-line" id="c_reachGeneral">–</div>
+    <div class="reach-line" id="c_reachLifetime">–</div>
+    <div class="reach-line" id="c_reachRegular">–</div>
+    <div class="reach-line" id="c_reachPerDay">–</div>
+    <div class="sub-text" id="c_reachPerDaySub"></div>
+
+    <div class="reach-compare">
+      <label for="c_countrySelect">Compare to Western Country Population</label>
+      <select id="c_countrySelect" onchange="updateCountryCompare('c')"></select>
+      <div class="reach-compare-text" id="c_countryCompareText"></div>
+    </div>
+  </div>
+
+  <div class="method-note">
+    <b>About these numbers:</b> tier classification follows a two-axis rule — decided-audience size combined with length-adjusted retention — rather than a single size cutoff, with one override: past roughly 1,000,000 decided viewers, the tool assigns Mainstream regardless of retention, since a completed audience that large likely exceeds most of MAL's realistic active-tracker base on its own. Retention is reported with a <b>Wilson score interval</b> (95%); for a title with hundreds of thousands of decided viewers, that interval is razor-tight, meaning the retention figure itself is close to exact. Most of the real uncertainty here comes from the weights and multipliers applied afterward, not from the retention measurement. <b>Length-adjusted retention</b> normalizes to a 12-episode reference by assuming a constant per-episode drop rate — a real, named technique (geometric survival normalization), though the constant-hazard assumption is a simplification. Real attrition tends to be front-loaded, with most drop-off happening in the first few episodes, so for very long runs this adjustment likely overstates true stickiness; treat it as directional rather than exact. The tier thresholds (85%/50% retention, 80K/1M audience size) are still round-number judgment calls rather than values fit to real data, since no published dataset would let you fit them properly.
+  </div>
+</div>
+</div>
+
+<div id="panelEstimation" class="tab-panel">
+<div class="calculator">
+  <h3>Raw MAL Stats</h3>
+  <div class="grid">
+    <div class="input-group"><label>Completed</label><input type="number" id="e_completed" value="100000" oninput="calculateEstimation()"></div>
+    <div class="input-group"><label>Dropped</label><input type="number" id="e_dropped" value="20000" oninput="calculateEstimation()"></div>
+    <div class="input-group"><label>Watching</label><input type="number" id="e_watching" value="15000" oninput="calculateEstimation()"></div>
+    <div class="input-group"><label>On-Hold</label><input type="number" id="e_onHold" value="10000" oninput="calculateEstimation()"></div>
+  </div>
+
+  <label class="checkbox-group">
+    <input type="checkbox" id="e_isAiring" onchange="calculateEstimation()">
+    <div>
+      <strong>Currently Airing?</strong><br>
+      <span style="font-size: 0.8rem; color: var(--muted);">If checked, Watching/On-Hold stay flat. If unchecked, they decay the longer the show has been finished.</span>
+    </div>
+  </label>
+
+  <div class="input-group" id="e_yearsWrap" style="margin-bottom: 20px;">
+    <label>Years Since It Finished: <span id="e_yearsLabel" style="color:var(--accent)">2</span></label>
+    <input type="range" id="e_yearsSince" min="0" max="20" step="0.5" value="2" oninput="calculateEstimation()">
+  </div>
+
+  <h3>Engagement Weights — Low / Likely / High</h3>
+
+  <div class="param-row">
+    <span class="param-title">Dropped Weight (active dislike)</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.05" id="e_dropWeight_low" value="0.7" oninput="calculateEstimation()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.05" id="e_dropWeight_likely" value="1.0" oninput="calculateEstimation()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.05" id="e_dropWeight_high" value="1.3" oninput="calculateEstimation()"></div>
+    </div>
+    <div class="sub-text">They watched enough to actively reject it — they count as audience. Low end treats some drops as barely-exposed 1-episode bounces.</div>
+  </div>
+
+  <div class="param-row">
+    <span class="param-title">Watching Decay Rate (post-finish)</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.05" id="e_watchDecay_low" value="0.15" oninput="calculateEstimation()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.05" id="e_watchDecay_likely" value="0.35" oninput="calculateEstimation()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.05" id="e_watchDecay_high" value="0.6" oninput="calculateEstimation()"></div>
+    </div>
+    <div class="sub-text">How fast "Watching" gets discounted per year after the show ends. Higher = faster to assume abandoned/forgotten.</div>
+  </div>
+
+  <div class="param-row">
+    <span class="param-title">On-Hold Decay Rate (post-finish)</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.02" id="e_holdDecay_low" value="0.05" oninput="calculateEstimation()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.02" id="e_holdDecay_likely" value="0.15" oninput="calculateEstimation()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.02" id="e_holdDecay_high" value="0.35" oninput="calculateEstimation()"></div>
+    </div>
+    <div class="sub-text">On-hold decays slower than Watching — it's a deliberate pause, not a forgotten tab.</div>
+  </div>
+
+  <h3>Era Adjustment</h3>
+  <div class="input-group" style="margin-bottom: 12px;">
+    <label>Release Year</label>
+    <input type="number" id="e_releaseYear" value="2024" oninput="suggestAgeEstimation(); calculateEstimation()">
+  </div>
+  <div class="param-row">
+    <span class="param-title">Age Era Multiplier</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.05" id="e_ageMultiplier_low" value="1.0" oninput="calculateEstimation()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.05" id="e_ageMultiplier_likely" value="1.0" oninput="calculateEstimation()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.05" id="e_ageMultiplier_high" value="1.2" oninput="calculateEstimation()"></div>
+    </div>
+    <div class="sub-text">Auto-suggested from release year (MAL's userbase was smaller in earlier eras) — all three fields stay editable.</div>
+  </div>
+
+  <h3>Western Sample Scale</h3>
+  <div class="tier-row">
+    <div class="tier-btn" id="e_tierNiche" onclick="setTierEstimation('niche')">Niche / Cult<br><span style="color:var(--muted)">2.0–3.5x</span></div>
+    <div class="tier-btn active" id="e_tierStandard" onclick="setTierEstimation('standard')">Standard Seasonal<br><span style="color:var(--muted)">5–8x</span></div>
+    <div class="tier-btn" id="e_tierMainstream" onclick="setTierEstimation('mainstream')">Mainstream Giant<br><span style="color:var(--muted)">10–18x</span></div>
+  </div>
+  <div class="param-row">
+    <span class="param-title">Scale Multiplier</span>
+    <div class="param-inputs">
+      <div class="param-input"><span>Low</span><input type="number" step="0.5" id="e_westernScale_low" value="5.0" oninput="calculateEstimation()"></div>
+      <div class="param-input likely"><span>Likely</span><input type="number" step="0.5" id="e_westernScale_likely" value="6.5" oninput="calculateEstimation()"></div>
+      <div class="param-input"><span>High</span><input type="number" step="0.5" id="e_westernScale_high" value="8.0" oninput="calculateEstimation()"></div>
+    </div>
+    <div class="sub-text">Niche: hardcore fans track everything, so MAL ≈ most of the real audience. Mainstream: casual viewers who never touch a tracker dwarf the MAL count. Click a tier to load a starting range, then fine-tune.</div>
+  </div>
+
+  <div class="suggestion" id="e_tierSuggestion"></div>
+
+  <h3>Simulation Range</h3>
+  <div class="ci-row">
+    <div class="ci-btn" id="e_ci50" onclick="setCIEstimation(50)">50%</div>
+    <div class="ci-btn active" id="e_ci80" onclick="setCIEstimation(80)">80%</div>
+    <div class="ci-btn" id="e_ci95" onclick="setCIEstimation(95)">95%</div>
+  </div>
+  <div class="sub-text">How wide a band to report around the median. Each calculation runs 6,000 random draws, pulling one value from every Low–Likely–High range above.</div>
+
+  <div class="results">
+    <div class="stage">
+      <div class="stage-label">Effective Platform Viewers <span style="opacity:0.7">(weighted MAL, simulated median)</span></div>
+      <div class="stage-value" id="e_effViewers">0</div>
+      <div class="stage-range"><span id="e_ciLabelEff">80</span>% range: <span id="e_effRange">–</span></div>
+      <table>
+        <tr><td>Completed</td><td class="num" id="e_rowCompleted"></td></tr>
+        <tr><td>Dropped (weighted)</td><td class="num" id="e_rowDropped"></td></tr>
+        <tr><td>Watching (weighted)</td><td class="num" id="e_rowWatching"></td></tr>
+        <tr><td>On-Hold (weighted)</td><td class="num" id="e_rowHold"></td></tr>
+      </table>
+      <div class="sub-text">Table uses your "Likely" values only — the number above reflects the full simulated range.</div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-label">Age-Adjusted Platform Reach</div>
+      <div class="stage-value" id="e_ageAdjViewers">0</div>
+      <div class="stage-range"><span id="e_ciLabelAge">80</span>% range: <span id="e_ageRange">–</span></div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-label">Estimated Total Western Population Reach</div>
+      <div class="stage-value accent" id="e_totalReach">0</div>
+      <div class="stage-range"><span id="e_ciLabelTotal">80</span>% range: <span id="e_totalRange">–</span></div>
+      <div class="stage-mean">simulated mean: <span id="e_totalMean">–</span> (usually a bit above the median — the combined distribution skews right)</div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-label">True Retention (Completed vs Completed+Dropped)</div>
+      <div class="stage-value" id="e_retention" style="font-size: 1.5rem;">0%</div>
+    </div>
+  </div>
+
+  <div class="hist" id="e_histContainer"></div>
+  <div class="hist-labels"><span id="e_histMin">–</span><span>6,000 simulated outcomes</span><span id="e_histMax">–</span></div>
+  <div class="audience-ref">
+    <div class="sub-text">That is <b id="e_pctRegular">–</b> of the ~20–25% of U.S./Western consumers who watch anime regularly.</div>
+    <div class="sub-text">That is <b id="e_pctLifetime">–</b> of the ~35–50% of people in the global West who've watched at least one anime in their lifetime.</div>
+  </div>
+
+  <div class="reach-section">
+    <h3>Estimated Reach</h3>
+    <div class="reach-line" id="e_reachGeneral">–</div>
+    <div class="reach-line" id="e_reachLifetime">–</div>
+    <div class="reach-line" id="e_reachRegular">–</div>
+    <div class="reach-line" id="e_reachPerDay">–</div>
+    <div class="sub-text" id="e_reachPerDaySub"></div>
+
+    <div class="reach-compare">
+      <label for="e_countrySelect">Compare to Western Country Population</label>
+      <select id="e_countrySelect" onchange="updateCountryCompare('e')"></select>
+      <div class="reach-compare-text" id="e_countryCompareText"></div>
+    </div>
+  </div>
+
+  <div class="method-note">
+    <b>How the range is built:</b> every uncertain factor above is treated as a Low–Likely–High triangular distribution rather than a single fixed number. The calculator draws 6,000 random combinations from those distributions, runs the full pipeline for each, and reports the median plus the middle band as your range. Raw MAL counts are treated as exact — only the <i>assumptions</i> carry uncertainty, not the numbers you looked up. Parameters are sampled independently, which slightly understates the true uncertainty if some of these actually move together in reality. And the range is only as honest as the Low/High you set — narrowing them will always shrink the interval, whether or not that's justified.
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const SIM_N = 6000;
+
+// ==================== Input State Synchronization ====================
+// Completion (c_*) and Estimation (e_*) each have their own visible fields (layout unchanged),
+// but they represent ONE shared logical input. Any real user edit to one side is mirrored to the
+// other side immediately, and the affected tab is recalculated so both tabs always reflect the
+// same current inputs. This does not touch tab switching (showTab) or any calculation math.
+const SHARED_INPUT_SUFFIXES = [
+  'completed', 'dropped', 'watching', 'onHold', 'isAiring', 'yearsSince',
+  'dropWeight_low', 'dropWeight_likely', 'dropWeight_high',
+  'watchDecay_low', 'watchDecay_likely', 'watchDecay_high',
+  'holdDecay_low', 'holdDecay_likely', 'holdDecay_high',
+  'releaseYear',
+  'ageMultiplier_low', 'ageMultiplier_likely', 'ageMultiplier_high'
+];
+const SHARED_INPUT_PAIRS = {};
+SHARED_INPUT_SUFFIXES.forEach(suffix => {
+  SHARED_INPUT_PAIRS['c_' + suffix] = 'e_' + suffix;
+  SHARED_INPUT_PAIRS['e_' + suffix] = 'c_' + suffix;
+});
+
+function mirrorInputChange(id) {
+  const mirrorId = id && SHARED_INPUT_PAIRS[id];
+  if (!mirrorId) return;
+  const src = $(id), dst = $(mirrorId);
+  if (!src || !dst) return;
+
+  if (src.type === 'checkbox') {
+    if (dst.checked === src.checked) return;
+    dst.checked = src.checked;
+  } else {
+    if (dst.value === src.value) return;
+    dst.value = src.value;
+  }
+
+  const targetIsCompletion = mirrorId.charAt(0) === 'c';
+  const suffix = mirrorId.slice(2);
+  if (suffix === 'releaseYear') {
+    if (targetIsCompletion) { suggestAgeCompletion(); calculateCompletion(); }
+    else { suggestAgeEstimation(); calculateEstimation(); }
+  } else {
+    if (targetIsCompletion) calculateCompletion(); else calculateEstimation();
+  }
+}
+
+document.addEventListener('input', e => mirrorInputChange(e.target && e.target.id));
+document.addEventListener('change', e => mirrorInputChange(e.target && e.target.id));
+
+function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+
+function sampleTriangular(min, mode, max) {
+  if (max <= min) return mode;
+  if (mode < min) mode = min;
+  if (mode > max) mode = max;
+  const u = Math.random();
+  const fc = (mode - min) / (max - min);
+  if (u < fc) return min + Math.sqrt(u * (max - min) * (mode - min));
+  return max - Math.sqrt((1 - u) * (max - min) * (max - mode));
+}
+
+function percentile(sorted, p) {
+  const idx = (p / 100) * (sorted.length - 1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+}
+
+function meanOf(sorted) {
+  let s = 0;
+  for (let i = 0; i < sorted.length; i++) s += sorted[i];
+  return s / sorted.length;
+}
+
+function getTriple(prefix) {
+  let low = parseFloat($(prefix + '_low').value);
+  let likely = parseFloat($(prefix + '_likely').value);
+  let high = parseFloat($(prefix + '_high').value);
+  if (isNaN(low)) low = likely;
+  if (isNaN(high)) high = likely;
+  if (low > high) { const t = low; low = high; high = t; }
+  if (likely < low) likely = low;
+  if (likely > high) likely = high;
+  return { low, likely, high };
+}
+
+function runSimulation(N, completed, dropped, watching, onHold, isAiring, years, dw, wd, hd, am, ws) {
+  const effArr = new Array(N), ageArr = new Array(N), totalArr = new Array(N);
+  for (let i = 0; i < N; i++) {
+    const dwS = sampleTriangular(dw.low, dw.likely, dw.high);
+    const wdS = sampleTriangular(wd.low, wd.likely, wd.high);
+    const hdS = sampleTriangular(hd.low, hd.likely, hd.high);
+    const amS = sampleTriangular(am.low, am.likely, am.high);
+    const wsS = sampleTriangular(ws.low, ws.likely, ws.high);
+
+    const watchWeight = isAiring ? 1.0 : Math.max(0.12, Math.exp(-wdS * years));
+    const holdWeight = isAiring ? 0.9 : Math.max(0.15, Math.exp(-hdS * years));
+
+    const eff = completed + watching * watchWeight + dropped * dwS + onHold * holdWeight;
+    const ageAdj = eff * amS;
+    const total = ageAdj * wsS;
+
+    effArr[i] = eff; ageArr[i] = ageAdj; totalArr[i] = total;
+  }
+  effArr.sort((a, b) => a - b);
+  ageArr.sort((a, b) => a - b);
+  totalArr.sort((a, b) => a - b);
+  return { effArr, ageArr, totalArr };
+}
+
+// ---- Completion-only simulation (never shared with Estimation) ----
+// Identical pipeline to runSimulation above — same sampled parameters, same eff -> ageAdj -> total
+// chain — with exactly one addition: each draw's effective viewership is multiplied by that
+// draw's Completion retention probability (computed from this same draw's sampled dwS/hdS, so the
+// retention estimate carries the same Monte Carlo uncertainty as the rest of the model). Nothing
+// else about the pipeline is simplified, bypassed, or reordered. This function is only ever
+// called from calculateCompletion() — Estimation continues to use the untouched runSimulation().
+function runSimulationCompletion(N, completed, dropped, watching, onHold, isAiring, years, dw, wd, hd, am, ws, episodes) {
+  const effArr = new Array(N), ageArr = new Array(N), totalArr = new Array(N);
+  for (let i = 0; i < N; i++) {
+    const dwS = sampleTriangular(dw.low, dw.likely, dw.high);
+    const wdS = sampleTriangular(wd.low, wd.likely, wd.high);
+    const hdS = sampleTriangular(hd.low, hd.likely, hd.high);
+    const amS = sampleTriangular(am.low, am.likely, am.high);
+    const wsS = sampleTriangular(ws.low, ws.likely, ws.high);
+
+    const watchWeight = isAiring ? 1.0 : Math.max(0.12, Math.exp(-wdS * years));
+    const holdWeight = isAiring ? 0.9 : Math.max(0.15, Math.exp(-hdS * years));
+
+    const retentionProb = completionRetentionProbability(completed, dropped, episodes, dwS, hdS).probability;
+
+    const eff = (completed + watching * watchWeight + dropped * dwS + onHold * holdWeight) * retentionProb;
+    const ageAdj = eff * amS;
+    const total = ageAdj * wsS;
+
+    effArr[i] = eff; ageArr[i] = ageAdj; totalArr[i] = total;
+  }
+  effArr.sort((a, b) => a - b);
+  ageArr.sort((a, b) => a - b);
+  totalArr.sort((a, b) => a - b);
+  return { effArr, ageArr, totalArr };
+}
+
+// ==================== COMPLETION TAB ====================
+let compCiLevel = 80;
+
+// Cached result sets — populated at the end of calculateCompletion() / calculateEstimation().
+// Switching tabs (showTab) never calls these functions, so it only ever displays whatever is
+// currently cached/rendered for that tab — it never triggers a recalculation.
+let completionResultsCache = null;
+let estimationResultsCache = null;
+
+// ---- Wilson score interval for the retention proportion ----
+function wilsonInterval(successes, n) {
+  if (n <= 0) return { low: 0, high: 0 };
+  const z = 1.96; // 95%
+  const phat = successes / n;
+  const z2 = z * z;
+  const denom = 1 + z2 / n;
+  const center = (phat + z2 / (2 * n)) / denom;
+  const margin = (z / denom) * Math.sqrt((phat * (1 - phat)) / n + z2 / (4 * n * n));
+  return { low: Math.max(0, center - margin), high: Math.min(1, center + margin) };
+}
+
+// ---- Length-normalized retention: constant per-episode hazard model ----
+function lengthAdjustRetention(retention, episodes) {
+  const REF = 12;
+  if (!episodes || episodes < 6) return { adj: retention, applied: false };
+  const N = Math.min(Math.max(episodes, 6), 600);
+  if (retention <= 0) return { adj: 0, applied: Math.abs(N - REF) > 0.01 };
+  if (retention >= 1) return { adj: 1, applied: Math.abs(N - REF) > 0.01 };
+  const perEp = Math.pow(retention, 1 / N);
+  const adj = Math.pow(perEp, REF);
+  return { adj, applied: Math.abs(N - REF) > 0.01, N };
+}
+
+// ---- Completion-only retention model ----
+// Estimates the probability that a viewer who starts this series reaches its final episode.
+// This is the Completion tab's OWN model — it is never called from, and never calls into,
+// anything on the Estimation tab (e.g. Estimation's plain completed/(completed+dropped) "True
+// Retention" figure). It is also distinct from the "Raw retention" / "Length-adjusted retention"
+// stats above, which exist purely for tier classification.
+//
+// The probability is a composite of several Completion-model factors, with episode count acting
+// as just ONE contributing factor rather than the sole determinant:
+//   1. Empirical completion signal — this title's own completed/dropped ratio when there's a big
+//      enough decided-audience sample to trust it (falls back to a neutral baseline otherwise).
+//   2. Episode-count factor — a generic per-episode continuation probability compounded over the
+//      show's own episode count, which nudges the estimate down for longer runs, all else equal,
+//      without by itself setting the value.
+//   3. Engagement-shape factors already native to the Completion model — the sampled drop-weight
+//      and hold-decay parameters, which describe how "sticky" the show's undecided/dropped
+//      audience already looks — pull the probability slightly up or down around factors 1 and 2.
+// Returns a 0..1 probability plus the intermediate factors, for display and for feeding directly
+// into the Completion effective-viewership pipeline.
+function completionRetentionProbability(completed, dropped, episodes, dwS, hdS) {
+  const decided = completed + dropped;
+  const N = Math.max(1, Math.min(Math.round(episodes) || 1, 600));
+
+  // Factor 1: empirical completion signal (Completion-tab data only).
+  const empirical = decided >= 50
+    ? Math.min(Math.max(completed / decided, 0.01), 1)
+    : 0.75; // neutral baseline when there isn't yet a trustworthy decided-audience sample
+
+  // Factor 2: episode-count factor — generic constant per-episode continuation probability,
+  // compounded over the show's own length. Secondary by design: it only ever discounts, and only
+  // mildly per episode, so it nudges rather than drives the final probability.
+  const PER_EP_CONTINUE = 0.997;
+  const episodeFactor = N > 1 ? Math.pow(PER_EP_CONTINUE, N - 1) : 1;
+
+  // Factor 3: engagement-shape nudge from the Completion model's own sampled parameters.
+  // A higher drop-weight (dwS) means dropped viewers are already being counted more generously
+  // elsewhere in the model, which corresponds to a stickier-looking audience, so it nudges
+  // probability up slightly; a higher hold-decay (hdS) means on-hold viewers fade faster, a sign
+  // of a less-committed audience, so it nudges probability down slightly. Both effects are capped
+  // small (±5%) so this stays a nudge, not a driver.
+  const engagementFactor = Math.min(Math.max(1 + (dwS - 0.5) * 0.1 - hdS * 0.5, 0.95), 1.05);
+
+  const probability = Math.min(Math.max(empirical * episodeFactor * engagementFactor, 0), 1);
+  return { probability, empirical, episodeFactor, engagementFactor, N, decided };
+}
+
+// ---- Residual Engagement Ratio: decay-maturity gate ----
+// These floor values intentionally mirror the existing decay floors already used in
+// runSimulationCompletion / calculateCompletion (Math.max(0.12, ...) for watchWeight,
+// Math.max(0.15, ...) for holdWeight) — no new decay system is introduced, this just reads the
+// same curve's resting point. "Matured" means enough years have elapsed post-air that the decay
+// curve has flattened out to (approximately) its floor, so a persistent Watching/On Hold count is
+// no longer explainable by simple recency (a show that just finished airing will naturally still
+// show a high Watching count regardless of its long-term profile — that's not yet a signal).
+// While a title is still airing, decay never applies at all, so it is never considered "matured".
+const RER_WATCH_FLOOR = 0.12;
+const RER_HOLD_FLOOR = 0.15;
+const RER_MATURITY_TOLERANCE = 1.10; // "within ~10% of floor"
+function decayHasMatured(isAiring, watchWeight, holdWeight) {
+  if (isAiring) return false;
+  return watchWeight <= RER_WATCH_FLOOR * RER_MATURITY_TOLERANCE &&
+         holdWeight <= RER_HOLD_FLOOR * RER_MATURITY_TOLERANCE;
+}
+
+// ---- Residual Engagement Ratio ----
+// (Watching + On Hold) / (Completed + Dropped), using the raw MAL status counts directly (not
+// decay-weighted) — the decay weights above only gate *when* this ratio is trustworthy, they don't
+// rescale the ratio itself. Deliberately NOT interpreted as evidence of ongoing discovery: MAL
+// statuses are inherently noisy and often go stale, so a persistent in-motion audience here is only
+// evidence that some share of the audience hasn't yet resolved into Completed/Dropped — which could
+// reflect continued discovery, continued slow engagement, or simply unresolved/abandoned trackers.
+function residualEngagementRatio(watching, onHold, completed, dropped) {
+  const decided = completed + dropped;
+  if (decided <= 0) return 0;
+  return (watching + onHold) / decided;
+}
+
+// ---- 2-axis tier classifier with massive-breakout override ----
+// Small-base (Niche vs Standard) logic, the large-base low-retention (<=50%) branch, and the
+// MASSIVE override are all unchanged. The only thing replaced is the old 85%-retention
+// discriminator between Standard Seasonal and Fandom Classic in the large-base, non-low-retention
+// case — that discriminator is now the Residual Engagement Ratio (RER) above, gated on decay
+// maturity. `engagement` is an optional { matured, rer } object (see call site).
+function classifyTier(decided, adjRetPct, engagement) {
+  const HIGH = 85, LOW = 50, SMALL_MAX = 80000, MASSIVE = 1000000;
+
+  // RER breakpoint — derived from a ~106-title calibration sample spanning the Completion tab's
+  // own inputs (aired/ended year, episode count, W/C/H/D), NOT from the four regression-test
+  // titles below. Method:
+  //   1. Of the 65 large-base (80k-1M decided), non-low-retention titles in the sample, only 18
+  //      had matured under the existing (unchanged) decay floors — i.e. old enough that
+  //      watchWeight/holdWeight had settled near their floors. Immature titles were excluded from
+  //      calibration, same as they're excluded from the live RER evaluation.
+  //   2. Across those 18, episode count correlated strongly with RER (Pearson r = 0.91) — long,
+  //      multi-cour/multi-year epics (e.g. a 201-episode, 4-year-run title) mechanically keep a
+  //      larger "still watching" pool in motion regardless of true fandom persistence. Two extreme
+  //      cases (110 and 201 episodes) sat far above Tukey's IQR upper fence and were excluded as
+  //      confounded outliers rather than genuine signal.
+  //   3. Restricting to titles with a "normal" episode count (<=30 — the same single/dual-cour
+  //      scope as this classifier's own regression-test titles) removed the confound and exposed
+  //      one dominant, unambiguous gap in the RER distribution: 17.6% to 40.2%, a ~22.6-point gap
+  //      roughly 7x wider than any other gap in that subset (all others were under 3.5 points).
+  //   4. The breakpoint is placed at that gap's midpoint (~28.9%), rounded to a clean 30%.
+  // Note this places the two most "persistent-looking" regression titles (Bakemonogatari 17.6%,
+  // K-On! 11.7%) on the Standard Seasonal side — both sit inside the tightly-packed lower cluster
+  // (5-18%) alongside most ordinary titles in the sample, not in the ~40%+ cluster that actually
+  // stands apart from the rest of the distribution. See the regression-test notes below.
+  const RER_THRESHOLD = 0.30;
+
+  let confidence = decided < 300 ? 'low' : (decided < 1500 ? 'medium' : 'normal');
+
+  if (decided >= MASSIVE) {
+    return {
+      tier: 'mainstream', confidence,
+      reasoning: `Massive breakout override: ${fmt(decided)} decided viewers (completed+dropped) alone is likely a huge share of MAL's entire realistic active-tracker population. No niche or contained-fandom title reaches that scale — this is Mainstream by sheer size, regardless of retention.`
+    };
+  }
+
+  const large = decided >= SMALL_MAX;
+  const high = adjRetPct >= HIGH;
+  const low = adjRetPct <= LOW;
+  let tier, reasoning;
+
+  if (!large) {
+    // Small-base logic — unchanged.
+    if (high) {
+      tier = 'niche';
+      reasoning = `Small decided base (${fmt(decided)}) with high retention (${adjRetPct.toFixed(1)}%) — the self-selected audience signature: most people who started this already knew what they were getting into.`;
+    } else if (low) {
+      tier = 'standard';
+      confidence = 'low';
+      reasoning = `Small base (${fmt(decided)}) with weak retention (${adjRetPct.toFixed(1)}%) — no strong reach signal either way. Defaulting to Standard, but confidence is limited on a base this size.`;
+    } else {
+      tier = 'standard';
+      reasoning = `Small-to-moderate base (${fmt(decided)}) with unremarkable retention (${adjRetPct.toFixed(1)}%) — no strong niche or hype signal.`;
+    }
+  } else if (low) {
+    // Low-retention logic — unchanged.
+    tier = 'mainstream';
+    reasoning = `Large base (${fmt(decided)}) with weak retention (${adjRetPct.toFixed(1)}%) — consistent with hype-driven sampling: a lot of people tried it because it was everywhere, and a large share bailed.`;
+  } else if (!engagement || !engagement.matured) {
+    // Not enough time has passed for the decay curve to mature — too early to read residual
+    // engagement as a long-term signal one way or the other.
+    tier = 'standard';
+    confidence = 'low';
+    reasoning = `Large base (${fmt(decided)}) with adequate retention (${adjRetPct.toFixed(1)}%), but not enough time has passed since airing for the Watching/On Hold decay to mature — too early to distinguish a genuinely long-lived audience from a still-recent airing window. Defaulting to Standard Seasonal until more time has passed.`;
+  } else if (engagement.rer >= RER_THRESHOLD) {
+    tier = 'fandom';
+    reasoning = `Large decided base (${fmt(decided)}) that, even long after airing, still shows meaningful residual engagement (${(engagement.rer * 100).toFixed(1)}% Watching+On Hold relative to its decided base, vs. a ${(RER_THRESHOLD * 100).toFixed(0)}% breakpoint) — a mature show whose audience hasn't fully resolved, suggesting a long-lived, self-sustaining fandom rather than one solely carried by its original airing window. (MAL statuses are noisy and can go stale, so this reads as unresolved engagement, not confirmed ongoing discovery.)`;
+  } else {
+    tier = 'standard';
+    reasoning = `Large decided base (${fmt(decided)}) whose residual engagement has largely diminished (${(engagement.rer * 100).toFixed(1)}% Watching+On Hold relative to its decided base, below the ${(RER_THRESHOLD * 100).toFixed(0)}% breakpoint) — a mature show whose audience has largely resolved, reading as a solid seasonal hit rather than a self-sustaining long-term fandom.`;
+  }
+  return { tier, confidence, reasoning };
+}
+
+function renderHistogramCompletion(sorted, ciLow, ciHigh) {
+  const bins = 22;
+  const min = sorted[0], max = sorted[sorted.length - 1];
+  const width = (max - min) / bins || 1;
+  const counts = new Array(bins).fill(0);
+  sorted.forEach(v => {
+    let idx = Math.floor((v - min) / width);
+    if (idx >= bins) idx = bins - 1;
+    if (idx < 0) idx = 0;
+    counts[idx]++;
+  });
+  const maxCount = Math.max(...counts, 1);
+  let html = '';
+  for (let i = 0; i < bins; i++) {
+    const binMid = min + width * (i + 0.5);
+    const inRange = binMid >= ciLow && binMid <= ciHigh;
+    const h = (counts[i] / maxCount * 100).toFixed(1);
+    html += `<div class="hist-bar${inRange ? ' in-range' : ''}" style="height:${h}%"></div>`;
+  }
+  $('c_histContainer').innerHTML = html;
+  $('c_histMin').innerText = fmt(min);
+  $('c_histMax').innerText = fmt(max);
+}
+
+function suggestAgeCompletion() {
+  const year = parseFloat($('c_releaseYear').value) || 2024;
+  let suggested;
+  if (year >= 2020) suggested = 1.0;
+  else if (year >= 2016) suggested = 1.0 + (2019 - year) * (0.3 / 3);
+  else if (year >= 2012) suggested = 1.3 + (2015 - year) * (0.5 / 3);
+  else if (year >= 2006) suggested = 1.8 + (2011 - year) * (0.7 / 5);
+  else suggested = 2.5 + Math.min((2006 - year) * 0.1, 1.0);
+  suggested = Math.round(Math.max(1.0, Math.min(3.5, suggested)) * 10) / 10;
+  const spread = Math.max(0.15, (suggested - 1) * 0.35);
+  $('c_ageMultiplier_low').value = Math.max(1.0, +(suggested - spread).toFixed(2));
+  $('c_ageMultiplier_likely').value = suggested;
+  $('c_ageMultiplier_high').value = +(suggested + spread * 1.5).toFixed(2);
+}
+
+function setTierCompletion(tier) {
+  ['Niche', 'Fandom', 'Standard', 'Mainstream'].forEach(t => $('c_tier' + t).classList.remove('active'));
+  const presets = { niche: [2.0, 2.75, 3.5], fandom: [3.0, 4.5, 7.0], standard: [5.0, 6.5, 8.0], mainstream: [10.0, 13.5, 18.0] };
+  const [lo, li, hi] = presets[tier];
+  $('c_westernScale_low').value = lo;
+  $('c_westernScale_likely').value = li;
+  $('c_westernScale_high').value = hi;
+  $('c_tier' + tier.charAt(0).toUpperCase() + tier.slice(1)).classList.add('active');
+  calculateCompletion();
+}
+
+function setCICompletion(level) {
+  compCiLevel = level;
+  ['50', '80', '95'].forEach(l => $('c_ci' + l).classList.remove('active'));
+  $('c_ci' + level).classList.add('active');
+  calculateCompletion();
+
+  // Mirror the shared confidence-interval selection to Estimation.
+  estCiLevel = level;
+  ['50', '80', '95'].forEach(l => $('e_ci' + l).classList.remove('active'));
+  $('e_ci' + level).classList.add('active');
+  calculateEstimation();
+}
+
+function calculateCompletion() {
+  const completed = parseFloat($('c_completed').value) || 0;
+  const dropped = parseFloat($('c_dropped').value) || 0;
+  const watching = parseFloat($('c_watching').value) || 0;
+  const onHold = parseFloat($('c_onHold').value) || 0;
+
+  const isAiring = $('c_isAiring').checked;
+  $('c_yearsWrap').style.opacity = isAiring ? 0.35 : 1;
+  $('c_yearsSince').disabled = isAiring;
+  const years = parseFloat($('c_yearsSince').value);
+  $('c_yearsLabel').innerText = years;
+
+  const dw = getTriple('c_dropWeight');
+  const wd = getTriple('c_watchDecay');
+  const hd = getTriple('c_holdDecay');
+  const am = getTriple('c_ageMultiplier');
+  const ws = getTriple('c_westernScale');
+
+  const watchWeightL = isAiring ? 1.0 : Math.max(0.12, Math.exp(-wd.likely * years));
+  const holdWeightL = isAiring ? 0.9 : Math.max(0.15, Math.exp(-hd.likely * years));
+  const calcDroppedL = dropped * dw.likely;
+  const calcWatchingL = watching * watchWeightL;
+  const calcOnHoldL = onHold * holdWeightL;
+
+  $('c_rowCompleted').innerText = fmt(completed);
+  $('c_rowDropped').innerText = fmt(calcDroppedL) + ' (w=' + dw.likely.toFixed(2) + ')';
+  $('c_rowWatching').innerText = fmt(calcWatchingL) + ' (w=' + watchWeightL.toFixed(2) + ')';
+  $('c_rowHold').innerText = fmt(calcOnHoldL) + ' (w=' + holdWeightL.toFixed(2) + ')';
+
+  // ---- Audience composition / retention analysis ----
+  const decided = completed + dropped;
+  $('c_decidedBase').innerText = fmt(decided);
+  const episodes = parseFloat($('c_episodeCount').value) || 0;
+
+  if (decided < 50) {
+    $('c_retention').innerText = '–';
+    $('c_retentionCI').innerText = 'Enter Completed/Dropped numbers for a retention analysis.';
+    $('c_adjRetention').innerText = '–';
+    $('c_adjRetentionNote').innerText = '';
+    $('c_tierSuggestion').innerHTML = 'Enter Completed/Dropped numbers to get a tier suggestion.';
+  } else {
+    const rawRetention = completed / decided;
+    const rawRetPct = rawRetention * 100;
+    const wilson = wilsonInterval(completed, decided);
+    $('c_retention').innerText = rawRetPct.toFixed(1) + '%';
+    $('c_retentionCI').innerText = `95% CI: ${(wilson.low * 100).toFixed(2)}% – ${(wilson.high * 100).toFixed(2)}%` +
+      (decided > 50000 ? ' — tight at this sample size; the raw rate itself is close to exact.' : '');
+
+    const lenAdj = lengthAdjustRetention(rawRetention, episodes);
+    const adjRetPct = lenAdj.adj * 100;
+    $('c_adjRetention').innerText = adjRetPct.toFixed(1) + '%';
+
+    if (!lenAdj.applied) {
+      $('c_adjRetentionNote').innerText = episodes < 6 && episodes > 0
+        ? 'Not adjusted — too short a run for the per-episode model to mean anything; using raw retention as-is.'
+        : 'Matches the 12-episode reference length — no adjustment needed.';
+    } else if (Math.abs(adjRetPct - rawRetPct) < 0.5) {
+      $('c_adjRetentionNote').innerText = 'Close to the 12-episode reference length — minimal adjustment.';
+    } else if (episodes > 12) {
+      $('c_adjRetentionNote').innerText = `Adjusted up from raw ${rawRetPct.toFixed(1)}% — a ${episodes}-episode run mechanically creates more chances to drop. Assumes a constant per-episode drop rate; real attrition is usually front-loaded (most drops happen early), so for long runs this likely overstates true stickiness. Read as directional.`;
+    } else {
+      $('c_adjRetentionNote').innerText = `Adjusted down from raw ${rawRetPct.toFixed(1)}% — a ${episodes}-episode run gives fewer chances to drop than the 12-episode reference.`;
+    }
+
+    const engagement = {
+      matured: decayHasMatured(isAiring, watchWeightL, holdWeightL),
+      rer: residualEngagementRatio(watching, onHold, completed, dropped)
+    };
+    const cls = classifyTier(decided, adjRetPct, engagement);
+    const badge = cls.confidence !== 'normal' ? `<span class="confidence-badge">${cls.confidence === 'low' ? 'LOW CONFIDENCE — SMALL SAMPLE' : 'MODERATE SAMPLE'}</span>` : '';
+    const tierNames = { niche: 'Niche / Cult', fandom: 'Fandom Classic', standard: 'Standard Seasonal', mainstream: 'Mainstream Giant' };
+    $('c_tierSuggestion').innerHTML = `Suggested tier: <b>${tierNames[cls.tier]}</b>${badge}<br>${cls.reasoning}`;
+  }
+
+  // ---- Completion retention rate (probability of reaching the final episode) ----
+  // Deterministic "likely-case" display, using this same Completion model's likely-mode
+  // parameters. The Monte Carlo pipeline below recomputes this per-sample from sampled
+  // parameters, so effective viewership always reflects the current Completion retention.
+  const compRetL = completionRetentionProbability(completed, dropped, episodes, dw.likely, hd.likely);
+  $('c_completionRetention').innerText = (compRetL.probability * 100).toFixed(1) + '%';
+  $('c_completionRetentionNote').innerText = decided >= 50
+    ? `Estimated probability a viewer reaches the finale, combining this title's own completion signal (${(compRetL.empirical * 100).toFixed(1)}%), an episode-count factor (×${compRetL.episodeFactor.toFixed(3)} over ${compRetL.N} episodes), and the model's drop/hold engagement shape (×${compRetL.engagementFactor.toFixed(3)}). This is the retention figure used to calculate Completion Effective Viewership below.`
+    : `Not enough decided-audience data yet, so this uses a neutral baseline completion signal (75%) combined with an episode-count factor (×${compRetL.episodeFactor.toFixed(3)} over ${compRetL.N} episodes) and engagement shape (×${compRetL.engagementFactor.toFixed(3)}). This is the retention figure used to calculate Completion Effective Viewership below.`;
+
+  // ---- Monte Carlo simulation ----
+  // Completion uses its OWN simulation function (never shared with Estimation) so the new
+  // Completion retention probability can be folded into effective viewership per-sample without
+  // touching Estimation's pipeline in any way.
+  const { effArr, ageArr, totalArr } = runSimulationCompletion(SIM_N, completed, dropped, watching, onHold, isAiring, years, dw, wd, hd, am, ws, episodes);
+
+  const half = (100 - compCiLevel) / 2;
+  const loP = half, hiP = 100 - half;
+
+  const effMed = percentile(effArr, 50), effLo = percentile(effArr, loP), effHi = percentile(effArr, hiP);
+  const ageMed = percentile(ageArr, 50), ageLo = percentile(ageArr, loP), ageHi = percentile(ageArr, hiP);
+  const totMed = percentile(totalArr, 50), totLo = percentile(totalArr, loP), totHi = percentile(totalArr, hiP);
+  const totMean = meanOf(totalArr);
+
+  $('c_effViewers').innerText = fmt(effMed);
+  $('c_effRange').innerText = fmt(effLo) + ' – ' + fmt(effHi);
+  $('c_ageAdjViewers').innerText = fmt(ageMed);
+  $('c_ageRange').innerText = fmt(ageLo) + ' – ' + fmt(ageHi);
+  $('c_totalReach').innerText = fmt(totMed);
+  $('c_totalRange').innerText = fmt(totLo) + ' – ' + fmt(totHi);
+  $('c_totalMean').innerText = fmt(totMean);
+  ['c_ciLabelEff', 'c_ciLabelAge', 'c_ciLabelTotal'].forEach(id => $(id).innerText = compCiLevel);
+
+  renderHistogramCompletion(totalArr, totLo, totHi);
+
+  // ---- Reference-audience context (added for merged tool) ----
+  const c_refPop = parseFloat($('refPopulation').value) || 800000000;
+  const c_regularPool = c_refPop * 0.225;  // midpoint of the ~20-25% regular-anime-audience estimate
+  const c_lifetimePool = c_refPop * 0.425; // midpoint of the ~35-50% lifetime-viewer estimate
+  $('c_pctRegular').innerText = c_regularPool > 0 ? (totMed / c_regularPool * 100).toFixed(2) + '%' : '–';
+  $('c_pctLifetime').innerText = c_lifetimePool > 0 ? (totMed / c_lifetimePool * 100).toFixed(2) + '%' : '–';
+
+  // ---- Completion Reach section (additive) ----
+  compAudienceMed = totMed;
+  renderReachSection('c', totMed, true);
+
+  // ---- Cache this result set so tab switches never trigger a recalculation ----
+  completionResultsCache = { calculatedAt: Date.now() };
+}
+
+// ==================== ESTIMATION TAB ====================
+let estCiLevel = 80;
+
+function renderHistogramEstimation(sorted, ciLow, ciHigh) {
+  const bins = 22;
+  const min = sorted[0], max = sorted[sorted.length - 1];
+  const width = (max - min) / bins || 1;
+  const counts = new Array(bins).fill(0);
+  sorted.forEach(v => {
+    let idx = Math.floor((v - min) / width);
+    if (idx >= bins) idx = bins - 1;
+    if (idx < 0) idx = 0;
+    counts[idx]++;
+  });
+  const maxCount = Math.max(...counts, 1);
+  let html = '';
+  for (let i = 0; i < bins; i++) {
+    const binMid = min + width * (i + 0.5);
+    const inRange = binMid >= ciLow && binMid <= ciHigh;
+    const h = (counts[i] / maxCount * 100).toFixed(1);
+    html += `<div class="hist-bar${inRange ? ' in-range' : ''}" style="height:${h}%"></div>`;
+  }
+  $('e_histContainer').innerHTML = html;
+  $('e_histMin').innerText = fmt(min);
+  $('e_histMax').innerText = fmt(max);
+}
+
+function suggestAgeEstimation() {
+  const year = parseFloat($('e_releaseYear').value) || 2024;
+  let suggested;
+  if (year >= 2020) suggested = 1.0;
+  else if (year >= 2016) suggested = 1.0 + (2019 - year) * (0.3 / 3);
+  else if (year >= 2012) suggested = 1.3 + (2015 - year) * (0.5 / 3);
+  else if (year >= 2006) suggested = 1.8 + (2011 - year) * (0.7 / 5);
+  else suggested = 2.5 + Math.min((2006 - year) * 0.1, 1.0);
+  suggested = Math.round(Math.max(1.0, Math.min(3.5, suggested)) * 10) / 10;
+  const spread = Math.max(0.15, (suggested - 1) * 0.35);
+  $('e_ageMultiplier_low').value = Math.max(1.0, +(suggested - spread).toFixed(2));
+  $('e_ageMultiplier_likely').value = suggested;
+  $('e_ageMultiplier_high').value = +(suggested + spread * 1.5).toFixed(2);
+}
+
+function setTierEstimation(tier) {
+  ['Niche', 'Standard', 'Mainstream'].forEach(t => $('e_tier' + t).classList.remove('active'));
+  const presets = { niche: [2.0, 2.75, 3.5], standard: [5.0, 6.5, 8.0], mainstream: [10.0, 13.5, 18.0] };
+  const [lo, li, hi] = presets[tier];
+  $('e_westernScale_low').value = lo;
+  $('e_westernScale_likely').value = li;
+  $('e_westernScale_high').value = hi;
+  $('e_tier' + tier.charAt(0).toUpperCase() + tier.slice(1)).classList.add('active');
+  calculateEstimation();
+}
+
+function setCIEstimation(level) {
+  estCiLevel = level;
+  ['50', '80', '95'].forEach(l => $('e_ci' + l).classList.remove('active'));
+  $('e_ci' + level).classList.add('active');
+  calculateEstimation();
+
+  // Mirror the shared confidence-interval selection to Completion.
+  compCiLevel = level;
+  ['50', '80', '95'].forEach(l => $('c_ci' + l).classList.remove('active'));
+  $('c_ci' + level).classList.add('active');
+  calculateCompletion();
+}
+
+function calculateEstimation() {
+  const completed = parseFloat($('e_completed').value) || 0;
+  const dropped = parseFloat($('e_dropped').value) || 0;
+  const watching = parseFloat($('e_watching').value) || 0;
+  const onHold = parseFloat($('e_onHold').value) || 0;
+
+  const isAiring = $('e_isAiring').checked;
+  $('e_yearsWrap').style.opacity = isAiring ? 0.35 : 1;
+  $('e_yearsSince').disabled = isAiring;
+  const years = parseFloat($('e_yearsSince').value);
+  $('e_yearsLabel').innerText = years;
+
+  const dw = getTriple('e_dropWeight');
+  const wd = getTriple('e_watchDecay');
+  const hd = getTriple('e_holdDecay');
+  const am = getTriple('e_ageMultiplier');
+  const ws = getTriple('e_westernScale');
+
+  // Deterministic "likely-case" breakdown for the table
+  const watchWeightL = isAiring ? 1.0 : Math.max(0.12, Math.exp(-wd.likely * years));
+  const holdWeightL = isAiring ? 0.9 : Math.max(0.15, Math.exp(-hd.likely * years));
+  const calcDroppedL = dropped * dw.likely;
+  const calcWatchingL = watching * watchWeightL;
+  const calcOnHoldL = onHold * holdWeightL;
+
+  $('e_rowCompleted').innerText = fmt(completed);
+  $('e_rowDropped').innerText = fmt(calcDroppedL) + ' (w=' + dw.likely.toFixed(2) + ')';
+  $('e_rowWatching').innerText = fmt(calcWatchingL) + ' (w=' + watchWeightL.toFixed(2) + ')';
+  $('e_rowHold').innerText = fmt(calcOnHoldL) + ' (w=' + holdWeightL.toFixed(2) + ')';
+
+  // Monte Carlo simulation
+  const { effArr, ageArr, totalArr } = runSimulation(SIM_N, completed, dropped, watching, onHold, isAiring, years, dw, wd, hd, am, ws);
+
+  const half = (100 - estCiLevel) / 2;
+  const loP = half, hiP = 100 - half;
+
+  const effMed = percentile(effArr, 50), effLo = percentile(effArr, loP), effHi = percentile(effArr, hiP);
+  const ageMed = percentile(ageArr, 50), ageLo = percentile(ageArr, loP), ageHi = percentile(ageArr, hiP);
+  const totMed = percentile(totalArr, 50), totLo = percentile(totalArr, loP), totHi = percentile(totalArr, hiP);
+  const totMean = meanOf(totalArr);
+
+  $('e_effViewers').innerText = fmt(effMed);
+  $('e_effRange').innerText = fmt(effLo) + ' – ' + fmt(effHi);
+  $('e_ageAdjViewers').innerText = fmt(ageMed);
+  $('e_ageRange').innerText = fmt(ageLo) + ' – ' + fmt(ageHi);
+  $('e_totalReach').innerText = fmt(totMed);
+  $('e_totalRange').innerText = fmt(totLo) + ' – ' + fmt(totHi);
+  $('e_totalMean').innerText = fmt(totMean);
+  ['e_ciLabelEff', 'e_ciLabelAge', 'e_ciLabelTotal'].forEach(id => $(id).innerText = estCiLevel);
+
+  renderHistogramEstimation(totalArr, totLo, totHi);
+
+  // ---- Reference-audience context (added for merged tool) ----
+  const e_refPop = parseFloat($('refPopulation').value) || 800000000;
+  const e_regularPool = e_refPop * 0.225;  // midpoint of the ~20-25% regular-anime-audience estimate
+  const e_lifetimePool = e_refPop * 0.425; // midpoint of the ~35-50% lifetime-viewer estimate
+  $('e_pctRegular').innerText = e_regularPool > 0 ? (totMed / e_regularPool * 100).toFixed(2) + '%' : '–';
+  $('e_pctLifetime').innerText = e_lifetimePool > 0 ? (totMed / e_lifetimePool * 100).toFixed(2) + '%' : '–';
+
+  const retentionRate = (completed + dropped) > 0 ? (completed / (completed + dropped)) * 100 : 0;
+  $('e_retention').innerText = retentionRate.toFixed(1) + '%';
+
+  const base = completed + dropped;
+  const totalRaw = completed + dropped + watching + onHold;
+  let suggestText = 'Enter Completed/Dropped numbers to get a tier suggestion.';
+  if (base > 200) {
+    if (retentionRate >= 75 && totalRaw < 80000) {
+      suggestText = `Suggested tier: <b>Niche / Cult</b> — high retention (${retentionRate.toFixed(1)}%) on a small base usually means a self-selecting, hardcore fanbase MAL already captures most of.`;
+    } else if (totalRaw > 500000) {
+      suggestText = `Suggested tier: <b>Mainstream Giant</b> — this base is large enough it's likely broken containment into casual viewership MAL barely touches.`;
+    } else {
+      suggestText = `Suggested tier: <b>Standard Seasonal</b> — retention (${retentionRate.toFixed(1)}%) and scale look like a typical core-anime-fan hit.`;
+    }
+  }
+  $('e_tierSuggestion').innerHTML = suggestText;
+
+  // ---- Estimated Reach section (additive) ----
+  estAudienceMed = totMed;
+  renderReachSection('e', totMed, false);
+
+  // ---- Cache this result set so tab switches never trigger a recalculation ----
+  estimationResultsCache = { calculatedAt: Date.now() };
+}
+
+// ==================== Tab switching ====================
+function showTab(tab) {
+  const isCompletion = tab === 'completion';
+  $('panelCompletion').style.display = isCompletion ? 'block' : 'none';
+  $('panelEstimation').style.display = isCompletion ? 'none' : 'block';
+  $('tabDescCompletion').style.display = isCompletion ? 'block' : 'none';
+  $('tabDescEstimation').style.display = isCompletion ? 'none' : 'block';
+  $('tabBtnCompletion').classList.toggle('active', isCompletion);
+  $('tabBtnEstimation').classList.toggle('active', !isCompletion);
+}
+
+// ==================== Clear All ====================
+// Default values for every user-editable input, taken from each element's original HTML `value`.
+const DEFAULT_INPUT_VALUES = {
+  refPopulation: '800000000',
+  c_completed: '100000', c_dropped: '20000', c_watching: '15000', c_onHold: '10000',
+  c_yearsSince: '2',
+  c_dropWeight_low: '0.7', c_dropWeight_likely: '1.0', c_dropWeight_high: '1.3',
+  c_watchDecay_low: '0.15', c_watchDecay_likely: '0.35', c_watchDecay_high: '0.6',
+  c_holdDecay_low: '0.05', c_holdDecay_likely: '0.15', c_holdDecay_high: '0.35',
+  c_releaseYear: '2024',
+  c_ageMultiplier_low: '1.0', c_ageMultiplier_likely: '1.0', c_ageMultiplier_high: '1.2',
+  c_episodeCount: '12',
+  c_westernScale_low: '5.0', c_westernScale_likely: '6.5', c_westernScale_high: '8.0',
+  e_completed: '100000', e_dropped: '20000', e_watching: '15000', e_onHold: '10000',
+  e_yearsSince: '2',
+  e_dropWeight_low: '0.7', e_dropWeight_likely: '1.0', e_dropWeight_high: '1.3',
+  e_watchDecay_low: '0.15', e_watchDecay_likely: '0.35', e_watchDecay_high: '0.6',
+  e_holdDecay_low: '0.05', e_holdDecay_likely: '0.15', e_holdDecay_high: '0.35',
+  e_releaseYear: '2024',
+  e_ageMultiplier_low: '1.0', e_ageMultiplier_likely: '1.0', e_ageMultiplier_high: '1.2',
+  e_westernScale_low: '5.0', e_westernScale_likely: '6.5', e_westernScale_high: '8.0'
+};
+
+function clearAll() {
+  // ---- Reset every user-editable input to its original default value ----
+  Object.keys(DEFAULT_INPUT_VALUES).forEach(id => {
+    const el = $(id);
+    if (el) el.value = DEFAULT_INPUT_VALUES[id];
+  });
+  $('c_isAiring').checked = false;
+  $('e_isAiring').checked = false;
+
+  // Reset tier-selector buttons back to their original default (Standard Seasonal)
+  ['c_tierNiche', 'c_tierFandom', 'c_tierStandard', 'c_tierMainstream'].forEach(id => { if ($(id)) $(id).classList.remove('active'); });
+  $('c_tierStandard').classList.add('active');
+  ['e_tierNiche', 'e_tierStandard', 'e_tierMainstream'].forEach(id => { if ($(id)) $(id).classList.remove('active'); });
+  $('e_tierStandard').classList.add('active');
+
+  // Reset confidence-interval buttons back to their original default (80%)
+  ['c_ci50', 'c_ci80', 'c_ci95'].forEach(id => $(id).classList.remove('active'));
+  $('c_ci80').classList.add('active');
+  compCiLevel = 80;
+  ['e_ci50', 'e_ci80', 'e_ci95'].forEach(id => $(id).classList.remove('active'));
+  $('e_ci80').classList.add('active');
+  estCiLevel = 80;
+
+  // Clear the anime search box/results and any in-flight lookups
+  if (animeSearchController) animeSearchController.abort();
+  if (animeStatsController) animeStatsController.abort();
+  $('animeSearchInput').value = '';
+  $('animeSearchStatus').innerText = '';
+  $('animeSearchResults').innerHTML = '';
+  apiFirstAirDateMs = null;
+
+  // ---- Delete both cached result sets for the current anime ----
+  completionResultsCache = null;
+  estimationResultsCache = null;
+
+  // ---- Restore the results area to the same state as when the page first loads ----
+  suggestAgeCompletion();
+  calculateCompletion();
+  suggestAgeEstimation();
+  calculateEstimation();
+}
+
+// ==================== Anime search / quick-fill (Jikan API v4, no key required) ====================
+const JIKAN_BASE = 'https://api.jikan.moe/v4';
+const ANIME_SEARCH_MIN_CHARS = 3;
+const ANIME_SEARCH_DEBOUNCE_MS = 700; // within the required 600-800ms window
+
+let animeSearchController = null;   // aborts the in-flight /anime search request
+let animeStatsController = null;    // aborts the in-flight /statistics request
+let animeSearchDebounceTimer = null;
+let animeSearchSeq = 0;             // bumped on every new search so stale responses can be ignored
+const animeMetaById = {};           // full search-result objects for this page load, keyed by mal_id (reused on select instead of re-fetching)
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+}
+
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+// Session-scoped cache so repeat searches/selections of the same title don't re-hit Jikan.
+function jikanCacheGet(key) {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function jikanCacheSet(key, value) {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* storage unavailable/full - fine to skip caching */ }
+}
+
+// Fetches JSON from Jikan; on HTTP 429 waits ~2-3s and retries once before giving up.
+async function fetchJikan(url, signal) {
+  let res;
+  try {
+    res = await fetch(url, { signal });
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    throw new Error('network');
+  }
+  if (res.status === 429) {
+    await sleep(2000 + Math.random() * 1000);
+    try {
+      res = await fetch(url, { signal });
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      throw new Error('network');
+    }
+    if (res.status === 429) throw new Error('rate-limited');
+  }
+  if (!res.ok) throw new Error('bad-response');
+  return res.json();
+}
+
+// Fired on every keystroke - enforces the 3-character minimum and debounces 600-800ms before searching.
+function onAnimeSearchInput() {
+  const q = $('animeSearchInput').value.trim();
+  clearTimeout(animeSearchDebounceTimer);
+  if (q.length < ANIME_SEARCH_MIN_CHARS) {
+    if (animeSearchController) animeSearchController.abort();
+    animeSearchSeq++; // invalidate any in-flight response
+    $('animeSearchResults').innerHTML = '';
+    $('animeSearchStatus').innerText = q.length ? ('Keep typing… (' + ANIME_SEARCH_MIN_CHARS + '+ characters to search)') : '';
+    return;
+  }
+  animeSearchDebounceTimer = setTimeout(searchAnime, ANIME_SEARCH_DEBOUNCE_MS);
+}
+
+async function searchAnime() {
+  clearTimeout(animeSearchDebounceTimer);
+  const q = $('animeSearchInput').value.trim();
+  if (q.length < ANIME_SEARCH_MIN_CHARS) {
+    $('animeSearchStatus').innerText = 'Type at least ' + ANIME_SEARCH_MIN_CHARS + ' characters to search.';
+    return;
+  }
+
+  if (animeSearchController) animeSearchController.abort();
+  animeSearchController = new AbortController();
+  const seq = ++animeSearchSeq;
+
+  $('animeSearchStatus').innerText = 'Searching MyAnimeList…';
+
+  const cacheKey = 'jikan_search_' + q.toLowerCase();
+  const cached = jikanCacheGet(cacheKey);
+  if (cached) {
+    cached.forEach(a => { animeMetaById[a.mal_id] = a; });
+    renderAnimeResults(cached, seq);
+    return;
+  }
+
+  try {
+    const json = await fetchJikan(JIKAN_BASE + '/anime?q=' + encodeURIComponent(q) + '&limit=10', animeSearchController.signal);
+    if (seq !== animeSearchSeq) return; // a newer search superseded this one
+    const list = json.data || [];
+    list.forEach(a => { animeMetaById[a.mal_id] = a; });
+    jikanCacheSet(cacheKey, list);
+    renderAnimeResults(list, seq);
+  } catch (err) {
+    if (err.name === 'AbortError' || seq !== animeSearchSeq) return;
+    $('animeSearchResults').innerHTML = '';
+    if (err.message === 'rate-limited') {
+      $('animeSearchStatus').innerText = 'MyAnimeList is rate-limiting search right now — wait a moment and try again.';
+    } else {
+      $('animeSearchStatus').innerText = 'Search failed — the Jikan API may be unreachable. Try again shortly.';
+    }
+  }
+}
+
+function renderAnimeResults(list, seq) {
+  if (seq !== animeSearchSeq) return; // stale by the time we got here
+  if (!list.length) {
+    $('animeSearchStatus').innerText = 'No results found — try a different title.';
+    $('animeSearchResults').innerHTML = '';
+    return;
+  }
+  $('animeSearchStatus').innerText = list.length + ' result(s) — click one to quick-fill both calculators.';
+  $('animeSearchResults').innerHTML = list.map(a => {
+    const yr = (a.aired && a.aired.prop && a.aired.prop.from && a.aired.prop.from.year) || a.year || '';
+    const img = (a.images && a.images.jpg && (a.images.jpg.small_image_url || a.images.jpg.image_url)) || '';
+    return '<div class="anime-result" data-id="' + a.mal_id + '" onclick="selectAnime(this)">' +
+      '<img src="' + img + '" alt="">' +
+      '<div><div class="anime-result-title">' + escapeHtml(a.title) + '</div>' +
+      '<div class="anime-result-meta">' + escapeHtml(a.type || '') + ' • ' + (a.episodes || '?') + ' eps • ' + (yr || '?') + '</div></div>' +
+      '</div>';
+  }).join('');
+}
+
+// Years between an anime's aired.to date and now, clamped/snapped to match the 0-20 / 0.5-step slider.
+function computeYearsSinceFinished(anime) {
+  const endStr = anime.aired && anime.aired.to;
+  if (!endStr) return null;
+  const end = new Date(endStr);
+  if (isNaN(end.getTime())) return null;
+  let years = (Date.now() - end.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+  years = Math.max(0, Math.min(20, years));
+  return Math.round(years * 2) / 2;
+}
+
+async function selectAnime(el) {
+  const id = el.getAttribute('data-id');
+  const anime = animeMetaById[id] || {}; // metadata already returned by the search response - no extra request needed
+  const episodes = anime.episodes || '';
+  const year = (anime.aired && anime.aired.prop && anime.aired.prop.from && anime.aired.prop.from.year) || anime.year || '';
+  const firstAirRaw = anime.aired && anime.aired.from; // exact first-air ISO date, when the API provides one — used by the new reach section below
+  const isAiring = !!anime.airing;
+  const yearsSince = isAiring ? null : computeYearsSinceFinished(anime);
+
+  if (animeStatsController) animeStatsController.abort();
+  animeStatsController = new AbortController();
+
+  $('animeSearchResults').innerHTML = '';
+  $('animeSearchStatus').innerText = 'Loading statistics…';
+
+  const statsCacheKey = 'jikan_stats_' + id;
+  let stats = jikanCacheGet(statsCacheKey);
+
+  try {
+    if (!stats) {
+      const json = await fetchJikan(JIKAN_BASE + '/anime/' + id + '/statistics', animeStatsController.signal);
+      stats = json.data || {};
+      jikanCacheSet(statsCacheKey, stats);
+    }
+    fillSharedStats({
+      completed: stats.completed || 0,
+      dropped: stats.dropped || 0,
+      watching: stats.watching || 0,
+      onHold: stats.on_hold || 0,
+      episodes: episodes,
+      year: year,
+      isAiring: isAiring,
+      yearsSince: yearsSince,
+      firstAirDate: firstAirRaw
+    });
+    $('animeSearchStatus').innerText = 'Filled in Completed / Dropped / Watching / On-Hold / Episode Count / Release Year on both tabs.';
+  } catch (err) {
+    if (err.name === 'AbortError') return;
+    // Statistics couldn't be loaded - still apply the metadata the search response already gave us.
+    fillSharedStats({
+      completed: null, dropped: null, watching: null, onHold: null,
+      episodes: episodes, year: year, isAiring: isAiring, yearsSince: yearsSince,
+      firstAirDate: firstAirRaw
+    });
+    if (err.message === 'rate-limited') {
+      $('animeSearchStatus').innerText = 'MyAnimeList is rate-limiting statistics right now — episode count/year were filled in, but try again shortly for the audience numbers.';
+    } else {
+      $('animeSearchStatus').innerText = 'Could not load statistics for that title — episode count/year were filled in where available.';
+    }
+  }
+}
+
+function fillSharedStats(vals) {
+  const has = v => v !== null && v !== undefined;
+
+  // Reach section (additive): capture the exact first-air date from the API, if present.
+  if (vals.firstAirDate) {
+    const _fad = new Date(vals.firstAirDate);
+    if (!isNaN(_fad.getTime())) apiFirstAirDateMs = _fad.getTime();
+  }
+
+  // Completion tab
+  if (has(vals.completed)) $('c_completed').value = vals.completed;
+  if (has(vals.dropped)) $('c_dropped').value = vals.dropped;
+  if (has(vals.watching)) $('c_watching').value = vals.watching;
+  if (has(vals.onHold)) $('c_onHold').value = vals.onHold;
+  if (vals.episodes) $('c_episodeCount').value = vals.episodes;
+  if (vals.year) $('c_releaseYear').value = vals.year;
+  if (typeof vals.isAiring === 'boolean') {
+    $('c_isAiring').checked = vals.isAiring;
+    if (!vals.isAiring && vals.yearsSince != null) $('c_yearsSince').value = vals.yearsSince;
+  }
+
+  // Estimation tab
+  if (has(vals.completed)) $('e_completed').value = vals.completed;
+  if (has(vals.dropped)) $('e_dropped').value = vals.dropped;
+  if (has(vals.watching)) $('e_watching').value = vals.watching;
+  if (has(vals.onHold)) $('e_onHold').value = vals.onHold;
+  if (vals.year) $('e_releaseYear').value = vals.year;
+  if (typeof vals.isAiring === 'boolean') {
+    $('e_isAiring').checked = vals.isAiring;
+    if (!vals.isAiring && vals.yearsSince != null) $('e_yearsSince').value = vals.yearsSince;
+  }
+
+  suggestAgeCompletion();
+  suggestAgeEstimation();
+  calculateCompletion();
+  calculateEstimation();
+}
+
+// ==================== Reach & Population Comparison (additive — does not change any existing calculation) ====================
+const WESTERN_COUNTRY_POPULATIONS = {
+  'United States': 335000000,
+  'Canada': 39000000,
+  'United Kingdom': 68000000,
+  'Australia': 26500000,
+  'New Zealand': 5200000,
+  'France': 68000000,
+  'Germany': 84000000,
+  'Italy': 59000000,
+  'Spain': 47500000,
+  'Portugal': 10300000,
+  'Netherlands': 17900000,
+  'Belgium': 11700000,
+  'Switzerland': 8900000,
+  'Austria': 9100000,
+  'Ireland': 5200000,
+  'Denmark': 5900000,
+  'Sweden': 10500000,
+  'Norway': 5500000,
+  'Finland': 5600000,
+  'Poland': 37600000
+};
+const WESTERN_COUNTRY_DEMONYMS = {
+  'United States': 'Americans',
+  'Canada': 'Canadians',
+  'United Kingdom': 'Britons',
+  'Australia': 'Australians',
+  'New Zealand': 'New Zealanders',
+  'France': 'French people',
+  'Germany': 'Germans',
+  'Italy': 'Italians',
+  'Spain': 'Spaniards',
+  'Portugal': 'Portuguese people',
+  'Netherlands': 'Dutch people',
+  'Belgium': 'Belgians',
+  'Switzerland': 'Swiss people',
+  'Austria': 'Austrians',
+  'Ireland': 'Irish people',
+  'Denmark': 'Danes',
+  'Sweden': 'Swedes',
+  'Norway': 'Norwegians',
+  'Finland': 'Finns',
+  'Poland': 'Poles'
+};
+const WESTERN_COUNTRIES_ORDER = Object.keys(WESTERN_COUNTRY_POPULATIONS);
+
+let compAudienceMed = 0;      // latest simulated "completed" Western audience (Completion tab)
+let estAudienceMed = 0;       // latest simulated Western audience (Estimation tab)
+let apiFirstAirDateMs = null; // exact first-air-date timestamp from the Jikan API, when a title was picked via search
+
+function fmtReach(n) {
+  if (n === null || n === undefined || !isFinite(n)) return '–';
+  return Math.round(n).toLocaleString('en-US');
+}
+
+// Smallest simple fraction (num/den, den<=30) approximating p within ~8% relative error, or null if none fits well.
+function naturalFraction(p) {
+  if (!(p > 0) || p >= 1) return null;
+  for (let n = 2; n <= 30; n++) {
+    const num = Math.round(p * n);
+    if (num < 1) continue;
+    const relErr = Math.abs((num / n) - p) / p;
+    if (relErr <= 0.08) return { num, den: n };
+  }
+  return null;
+}
+
+// Days elapsed since the title's first air date. Prefers the exact API date; if unavailable
+// (manual entry, or fetch failed), falls back to assuming a mid-year (July 1) release for
+// whatever Release Year is currently entered on that tab.
+function daysSinceFirstAir(releaseYearFieldId) {
+  let ms = apiFirstAirDateMs;
+  if (ms == null) {
+    const yearEl = $(releaseYearFieldId);
+    const year = yearEl ? parseFloat(yearEl.value) : NaN;
+    if (!year || isNaN(year)) return null;
+    ms = Date.UTC(Math.round(year), 6, 1);
+  }
+  const days = (Date.now() - ms) / 86400000;
+  return days > 0 ? days : null;
+}
+
+function populateCountrySelect(selectId) {
+  const sel = $(selectId);
+  if (!sel) return;
+  let html = '<option value="">Select a country…</option>';
+  WESTERN_COUNTRIES_ORDER.forEach(c => { html += '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; });
+  sel.innerHTML = html;
+}
+
+function updateCountryCompare(prefix) {
+  const audience = prefix === 'c' ? compAudienceMed : estAudienceMed;
+  const sel = $(prefix + '_countrySelect');
+  const target = $(prefix + '_countryCompareText');
+  if (!sel || !target) return;
+  const country = sel.value;
+  if (!country) { target.innerText = ''; return; }
+  const pop = WESTERN_COUNTRY_POPULATIONS[country];
+  if (!pop || !(audience > 0)) {
+    target.innerText = 'Not enough data yet to compare.';
+    return;
+  }
+  const p = audience / pop;
+  const pct = p * 100;
+  const pctStr = pct >= 10 ? Math.round(pct) + '%' : (pct >= 1 ? pct.toFixed(1) + '%' : pct.toFixed(2) + '%');
+  const possessive = country.charAt(country.length - 1) === 's' ? country + '\u2019' : country + '\u2019s';
+  let line = 'Equivalent to ' + pctStr + ' of ' + possessive + ' population.';
+  if (p >= 1) {
+    line += ' That surpasses the entire population of ' + country + ' (~' + p.toFixed(1) + '\u00d7 over).';
+  } else {
+    const frac = naturalFraction(p);
+    const demonym = WESTERN_COUNTRY_DEMONYMS[country] || (country + ' residents');
+    if (frac) line += ' Roughly ' + frac.num + ' in every ' + frac.den + ' ' + demonym + '.';
+  }
+  target.innerText = line;
+}
+
+// Renders the "Completion Reach" (prefix 'c') / "Estimated Reach" (prefix 'e') section.
+// audience = that tab's latest simulated total Western reach (median). isCompletion flips wording.
+function renderReachSection(prefix, audience, isCompletion) {
+  const refPop = parseFloat($('refPopulation').value) || 800000000;
+  const regularPool = refPop * 0.225;   // midpoint of the ~20-25% regular-anime-audience estimate
+  const lifetimePool = refPop * 0.425;  // midpoint of the ~35-50% lifetime-viewer estimate
+  const seenVerb = isCompletion ? 'has completed this series' : 'has seen this';
+
+  const genRatio = (audience > 0 && refPop > audience) ? refPop / audience : null;
+  $(prefix + '_reachGeneral').innerText = genRatio
+    ? 'Approximately 1 in every ' + fmtReach(genRatio) + ' Westerners ' + seenVerb + '.'
+    : 'Not enough data yet for a general-population comparison.';
+
+  const lifeRatio = (audience > 0 && lifetimePool > audience) ? lifetimePool / audience : null;
+  $(prefix + '_reachLifetime').innerText = lifeRatio
+    ? 'Approximately 1 in every ' + fmtReach(lifeRatio) + ' people who have watched anime at least once in their lifetime ' + seenVerb + '.'
+    : 'Not enough data yet for a lifetime-anime-audience comparison.';
+
+  const regRatio = (audience > 0 && regularPool > audience) ? regularPool / audience : null;
+  $(prefix + '_reachRegular').innerText = regRatio
+    ? 'Approximately 1 in every ' + fmtReach(regRatio) + ' regular anime fans ' + seenVerb + '.'
+    : 'Not enough data yet for a regular-anime-fan comparison.';
+
+  const days = daysSinceFirstAir(prefix + '_releaseYear');
+  const perDayEl = $(prefix + '_reachPerDay');
+  const perDaySubEl = $(prefix + '_reachPerDaySub');
+  if (days && audience > 0) {
+    const perDay = audience / days;
+    const perHour = perDay / 24;
+    const perMinute = perHour / 60;
+    perDayEl.innerText = isCompletion
+      ? 'Since release, this series has averaged approximately ' + fmtReach(perDay) + ' completed viewers per day.'
+      : 'Since its release, this series has averaged approximately ' + fmtReach(perDay) + ' new Western viewers per day.';
+    perDaySubEl.innerText = '\u2248 ' + fmtReach(perHour) + ' viewers/hour \u00b7 ' + (perMinute >= 1 ? fmtReach(perMinute) : perMinute.toFixed(2)) + ' viewers/minute';
+  } else {
+    perDayEl.innerText = 'Not enough time elapsed since release to estimate a daily rate.';
+    perDaySubEl.innerText = '';
+  }
+
+  updateCountryCompare(prefix);
+}
+
+// ==================== Init ====================
+populateCountrySelect('c_countrySelect');
+populateCountrySelect('e_countrySelect');
+suggestAgeCompletion();
+calculateCompletion();
+suggestAgeEstimation();
+calculateEstimation();
+</script>
+</body>
+</html>
