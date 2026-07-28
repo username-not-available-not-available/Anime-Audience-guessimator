@@ -912,7 +912,7 @@ function classifyTier(decided, adjRetPct, engagement) {
     reasoning = `Large decided base (${fmt(decided)}) that, even long after airing, still shows meaningful residual engagement (${(engagement.rer * 100).toFixed(1)}% Watching+On Hold relative to its decided base, vs. a ${(RER_THRESHOLD * 100).toFixed(0)}% breakpoint) — a mature show whose audience hasn't fully resolved, suggesting a long-lived, self-sustaining fandom rather than one solely carried by its original airing window. (MAL statuses are noisy and can go stale, so this reads as unresolved engagement, not confirmed ongoing discovery.)`;
   } else {
     tier = 'standard';
-    reasoning = `Large decided base (${fmt(decided)}) whose residual engagement has largely diminished (${(engagement.rer * 100).toFixed(1)}% Watching+On Hold relative to its decided base, below the ${(RER_THRESHOLD * 100).toFixed(0)}% breakpoint) — a mature show whose audience has largely resolved, reading as having the strength of a newly released seasonal, while not mainstream, influential in one way or another.`;
+    reasoning = `Large decided base (${fmt(decided)}) whose residual engagement has largely diminished (${(engagement.rer * 100).toFixed(1)}% Watching+On Hold relative to its decided base, below the ${(RER_THRESHOLD * 100).toFixed(0)}% breakpoint) — a mature show whose audience has largely resolved, reading it as having a potentially strong cultural legacy, while not mainstream, influential in one way or another.`;
   }
   return { tier, confidence, reasoning };
 }
