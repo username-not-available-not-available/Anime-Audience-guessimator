@@ -956,10 +956,63 @@ function suggestAgeCompletion() {
   $('c_ageMultiplier_high').value = +(suggested + spread * 1.5).toFixed(2);
 }
 
+// ---- Continuous tier-multiplier interpolation ----
+// Tier SELECTION (clicking a tier button) still loads that tier's fixed low/high multiplier
+// range unchanged — those ranges, and the audience thresholds that gate entry into each tier
+// (80k / 1M decided for Completion; 80k / 500k total for Estimation), are exactly what they were
+// before. What changes is how the "likely" point-estimate multiplier is picked *within* that
+// range: instead of always snapping to the tier's fixed midpoint regardless of the title's actual
+// numbers, it's placed according to how far the title sits between "just crossed into this tier"
+// and "at the edge of the next one" — using the same audience figure that already decides tier
+// membership. That means a title just barely inside a tier starts near that tier's low end
+// (picking up close to where the previous tier left off), and a title near the next threshold
+// sits near this tier's high end — smooth movement instead of a fixed jump every time a different
+// tier is clicked.
+//
+// `hi: null` marks the top (Mainstream) tier, which has no upper audience bound by design (the
+// MASSIVE-override threshold is a floor, not a ceiling). For that open-ended case, progress
+// toward the tier's high-end multiplier is measured on a log scale out to capMult× the entry
+// threshold, since raw linear scaling would never meaningfully move within any realistic range of
+// values above the floor.
+const TIER_AUDIENCE_BANDS_COMPLETION = {
+  niche: { lo: 0, hi: 80000 },
+  fandom: { lo: 80000, hi: 1000000 },
+  standard: { lo: 80000, hi: 1000000 },
+  mainstream: { lo: 1000000, hi: null, capMult: 10 }
+};
+const TIER_AUDIENCE_BANDS_ESTIMATION = {
+  niche: { lo: 0, hi: 80000 },
+  standard: { lo: 80000, hi: 500000 },
+  mainstream: { lo: 500000, hi: null, capMult: 10 }
+};
+
+function tierProgressFraction(band, audience) {
+  if (!(audience > 0)) return 0;
+  if (band.hi != null) {
+    if (band.hi <= band.lo) return 0;
+    return Math.min(Math.max((audience - band.lo) / (band.hi - band.lo), 0), 1);
+  }
+  // Open-ended top tier: log-scaled progress toward a saturation cap (capMult × entry threshold).
+  if (audience <= band.lo || band.lo <= 0) return 0;
+  const cap = band.lo * (band.capMult || 10);
+  return Math.min(Math.max(Math.log10(audience / band.lo) / Math.log10(cap / band.lo), 0), 1);
+}
+
+// Given a tier's fixed [low, high] multiplier range and a 0..1 progress fraction within that
+// tier's audience band, returns the [low, likely, high] triple. low/high stay exactly as defined
+// for the tier (the range itself is unchanged); only "likely" moves continuously within it.
+function interpolatedTierMultiplier(range, frac) {
+  const [lo, hi] = range;
+  const likely = lo + frac * (hi - lo);
+  return [lo, +likely.toFixed(2), hi];
+}
+
 function setTierCompletion(tier) {
   ['Niche', 'Fandom', 'Standard', 'Mainstream'].forEach(t => $('c_tier' + t).classList.remove('active'));
-  const presets = { niche: [2.0, 2.75, 3.5], fandom: [3.0, 4.5, 7.0], standard: [5.0, 6.5, 8.0], mainstream: [10.0, 13.5, 18.0] };
-  const [lo, li, hi] = presets[tier];
+  const ranges = { niche: [2.0, 3.5], fandom: [3.0, 7.0], standard: [5.0, 8.0], mainstream: [10.0, 18.0] };
+  const decided = (parseFloat($('c_completed').value) || 0) + (parseFloat($('c_dropped').value) || 0);
+  const frac = tierProgressFraction(TIER_AUDIENCE_BANDS_COMPLETION[tier], decided);
+  const [lo, li, hi] = interpolatedTierMultiplier(ranges[tier], frac);
   $('c_westernScale_low').value = lo;
   $('c_westernScale_likely').value = li;
   $('c_westernScale_high').value = hi;
@@ -1148,8 +1201,11 @@ function suggestAgeEstimation() {
 
 function setTierEstimation(tier) {
   ['Niche', 'Standard', 'Mainstream'].forEach(t => $('e_tier' + t).classList.remove('active'));
-  const presets = { niche: [2.0, 2.75, 3.5], standard: [5.0, 6.5, 8.0], mainstream: [10.0, 13.5, 18.0] };
-  const [lo, li, hi] = presets[tier];
+  const ranges = { niche: [2.0, 3.5], standard: [5.0, 8.0], mainstream: [10.0, 18.0] };
+  const totalRaw = (parseFloat($('e_completed').value) || 0) + (parseFloat($('e_dropped').value) || 0) +
+    (parseFloat($('e_watching').value) || 0) + (parseFloat($('e_onHold').value) || 0);
+  const frac = tierProgressFraction(TIER_AUDIENCE_BANDS_ESTIMATION[tier], totalRaw);
+  const [lo, li, hi] = interpolatedTierMultiplier(ranges[tier], frac);
   $('e_westernScale_low').value = lo;
   $('e_westernScale_likely').value = li;
   $('e_westernScale_high').value = hi;
@@ -1725,3 +1781,4 @@ calculateEstimation();
 </script>
 </body>
 </html>
+
