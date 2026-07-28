@@ -6,4 +6,4 @@ APP: https://username-not-available-not-available.github.io/Anime-Audience-guess
 
 Estimation Model: Outliers may occur in estimation reaches, so adjust accordingly if you see something off. Otherwise, autosuggest should flag 90% of the standard base. (The completion model, however, is capable of ruling out most of those outliers in the 10% in the base; autosuggested is as reliable as can be from existing constrained informed heuristics and available calibrated MAL data and constants, in summary)
 
-Calibration and Database for the completion model: When creating, it used a database of the top 100 anime and 6 additional ones as its main RER/Maturity calibrator 
+Calibration and Database for the completion model: When creating, it used a database of the top 100 anime and 6 additional ones as its main RER/Maturity calibrator  
